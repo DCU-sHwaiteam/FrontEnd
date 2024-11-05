@@ -55,18 +55,17 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AccountRegister from '@/views/AccountRegister.vue'
 import AccountLogin from '@/views/AccountLogin.vue'
+import MainPage from '@/views/mainPage.vue'
+
 const routes = [
   {
-    path: '/',
-    name: 'home',
-    component: HomeView
+    path: '/',  // 기본 경로로 설정
+    name: 'login',  // 로그인 페이지가 첫 화면이 되도록 설정
+    component: AccountLogin
   },
   {
     path: '/about',
     name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
   },
   {
@@ -75,9 +74,14 @@ const routes = [
     component: AccountRegister
   },
   {
-    path: '/login',
-    name: 'login',
-    component: AccountLogin
+    path: '/home',
+    name: 'home',
+    component: HomeView  // 로그인 성공 시 이동할 페이지
+  },
+  {
+    path: '/main',
+    name: 'mainPage',
+    component: MainPage
   }
 ]
 
@@ -87,5 +91,4 @@ const router = createRouter({
 })
 
 export default router
-
 
