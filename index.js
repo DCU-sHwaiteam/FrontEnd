@@ -51,11 +51,13 @@ export default createStore({
 })
 
 #router/index.js
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import AccountRegister from '@/views/AccountRegister.vue'
-import AccountLogin from '@/views/AccountLogin.vue'
-import MainPage from '@/views/mainPage.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import AccountRegister from '@/views/AccountRegister.vue';
+import AccountLogin from '@/views/AccountLogin.vue';
+import MainPage from '@/views/mainPage.vue';
+import MyClub from '@/views/MyClub.vue'; // MyClub.vue 컴포넌트 경로
+import ClubSearch from '@/views/ClubSearch.vue'; // ClubSearch.vue 컴포넌트 경로
 
 const routes = [
   {
@@ -82,13 +84,22 @@ const routes = [
     path: '/main',
     name: 'mainPage',
     component: MainPage
+  },
+  {
+    path: '/myClub',
+    name: 'myClub',
+    component: MyClub // MyClub.vue 컴포넌트 추가
+  },
+  {
+    path: '/clubSearch',
+    name: 'clubSearch',
+    component: ClubSearch // ClubSearch.vue 컴포넌트 추가
   }
-]
+];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
-})
+});
 
-export default router
-
+export default router;
