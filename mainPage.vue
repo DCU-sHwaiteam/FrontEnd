@@ -1,17 +1,30 @@
 <template>
-    <v-container class="MainPage">
-      <h1>메인 페이지</h1>
-      <p>로그인 성공 시 이 페이지로 이동합니다.</p>
-    </v-container>
-  </template>
-  
-  <script>
-  export default {
-    name: "mainPage",
-  };
-  </script>
-  
-  <style scoped>
-  /* 스타일을 여기에 추가하세요 */
-  </style>
-  
+  <v-app class="MainPage">
+    <v-app-bar app color="black" dark>
+      <v-toolbar-title>DCU 동아리</v-toolbar-title>
+      <v-container>
+        <v-row justify="space-around">
+          <v-btn @click="navigateTo('myClub')" color="primary">내 동아리</v-btn>
+          <v-btn @click="navigateTo('clubSearch')" color="primary">동아리 검색</v-btn>
+        </v-row>
+      </v-container>
+    </v-app-bar>
+    <v-divider color="gray" />
+  </v-app>
+</template>
+
+<script>
+export default {
+  methods: {
+    navigateTo(routeName) {
+      this.$router.push({ name: routeName });
+    }
+  }
+}
+</script>
+
+<style scoped>
+.v-app-bar {
+  border-bottom: 2px solid gray; /* 헤더 경계선 */
+}
+</style>
