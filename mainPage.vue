@@ -17,16 +17,18 @@
       </v-container>
     </v-app-bar>
 
-    <!-- 중앙 리스트 형식 버튼들 -->
+    <!-- 중앙 카드 스타일 버튼들 -->
     <v-container class="center-content">
-      <v-row justify="center">
+      <v-row justify="center" class="button-row">
         <v-col cols="12" sm="8" md="6">
-          <v-btn block color="grey lighten-3" class="list-button" @click="navigateTo('myClub')">
-            내 동아리
-          </v-btn>
-          <v-btn block color="grey lighten-3" class="list-button" @click="navigateTo('clubSearch')">
-            동아리 검색
-          </v-btn>
+          <v-card class="list-card" @click="navigateTo('myClub')" hover>
+            <v-card-title>내 동아리</v-card-title>
+            <v-card-subtitle>내 동아리를 관리하고 확인하세요</v-card-subtitle>
+          </v-card>
+          <v-card class="list-card" @click="navigateTo('clubSearch')" hover>
+            <v-card-title>동아리 검색</v-card-title>
+            <v-card-subtitle>다른 동아리를 찾아보세요</v-card-subtitle>
+          </v-card>
         </v-col>
       </v-row>
     </v-container>
@@ -40,7 +42,6 @@ export default {
       this.$router.push({ name: routeName });
     },
     logout() {
-      // 로그아웃 기능 구현 부분
       console.log("로그아웃되었습니다.");
     }
   }
@@ -69,11 +70,31 @@ export default {
   justify-content: center;
 }
 
-.list-button {
+.button-row {
+  gap: 16px; /* 카드 간격 */
+}
+
+.list-card {
+  padding: 16px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  transition: transform 0.2s ease;
+}
+
+.list-card:hover {
+  transform: translateY(-4px); /* 마우스 오버 시 살짝 상승 효과 */
+}
+
+.v-card-title {
   font-size: 1.2rem;
-  color: black;
-  margin-bottom: 20px;
-  height: 50px;
+  font-weight: bold;
+}
+
+.v-card-subtitle {
+  color: #666;
+  font-size: 0.9rem;
 }
 </style>
 
