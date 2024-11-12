@@ -32,7 +32,7 @@
           :key="club.id"
           cols="12" sm="6" md="4"
         >
-          <v-card class="list-card" hover>
+          <v-card class="list-card" @click="openClubDialog(club)" hover>
             <v-card-title>{{ club.name }}</v-card-title>
             <v-card-subtitle>{{ club.leader }} ({{ club.id }})</v-card-subtitle>
             <v-card-text>{{ club.description }}</v-card-text>
@@ -40,6 +40,29 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- 동아리 상세 팝업 -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card>
+        <v-card-title class="headline">{{ selectedClub.name }}</v-card-title>
+        <v-card-subtitle>동아리 장: {{ selectedClub.leader }} ({{ selectedClub.leaderId }})</v-card-subtitle>
+
+        <v-card-text>
+          <p>지도 교수: {{ selectedClub.advisor }}</p>
+          <p>최대 인원수: {{ selectedClub.maxMembers }}</p>
+          <p>현재 인원: {{ selectedClub.currentMembers }}</p>
+          <p>활동 일정: {{ selectedClub.activitySchedule }}</p>
+          <p>태그: {{ selectedClub.tags }}</p>
+          <p>소개: {{ selectedClub.description }}</p>
+        </v-card-text>
+
+        <!-- 팝업 하단 버튼 -->
+        <v-card-actions>
+          <v-btn color="primary" @click="applyClub">신청</v-btn>
+          <v-btn color="grey" @click="dialog = false">나가기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -49,25 +72,55 @@ export default {
   data() {
     return {
       searchQuery: '',
+      dialog: false,
+      selectedClub: {},
       clubs: [
-        { id: '20230001', name: '축구 동아리', leader: '김동아', description: '매주 축구 연습' },
-        { id: '20230002', name: '음악 동아리', leader: '박음악', description: '매주 금요일 연주회' },
-        { id: '20230003', name: '디지털 아트 동아리', leader: '이디지털', description: '디지털 아트 전시' },
-        { id: '20230004', name: '테크 동아리', leader: '최테크', description: '매주 코드 챌린지' },
+        {
+          id: '20230001',
+          name: '축구 동아리',
+          leader: '김동아',
+          leaderId: '12345678',
+          advisor: '박교수',
+          maxMembers: 20,
+          currentMembers: 15,
+          activitySchedule: '매주 화요일 5시',
+          tags: '운동, 축구',
+          description: '매주 축구 연습을 함께하는 동아리입니다.'
+        },
+        {
+          id: '20230002',
+          name: '음악 동아리',
+          leader: '박음악',
+          leaderId: '87654321',
+          advisor: '이교수',
+          maxMembers: 15,
+          currentMembers: 10,
+          activitySchedule: '매주 금요일 6시',
+          tags: '음악, 연주',
+          description: '음악을 좋아하는 사람들의 모임입니다.'
+        }
+        // 추가 예시 데이터...
       ]
     };
   },
   computed: {
     filteredClubs() {
-      // 검색 쿼리를 포함한 동아리 이름 필터링
-      return this.clubs.filter(club => {
-        return club.name.toLowerCase().includes(this.searchQuery.toLowerCase());
-      });
+      return this.clubs.filter(club =>
+        club.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
     }
   },
   methods: {
     navigateToAddClub() {
-      this.$router.push({ name: 'AddClub' }); // 동아리 추가 페이지로 이동
+      this.$router.push({ name: 'AddClub' });
+    },
+    openClubDialog(club) {
+      this.selectedClub = club;
+      this.dialog = true;
+    },
+    applyClub() {
+      console.log(`${this.selectedClub.name}에 신청하였습니다.`);
+      this.dialog = false;
     }
   }
 };
@@ -83,22 +136,12 @@ export default {
   margin-bottom: 16px;
   cursor: pointer;
   border-radius: 8px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
 
 .list-card:hover {
-  transform: translateY(-4px); /* 마우스 오버 시 살짝 상승 효과 */
-}
-
-.v-card-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.v-card-subtitle {
-  color: #666;
-  font-size: 0.9rem;
+  transform: translateY(-4px);
 }
 </style>
   
