@@ -1,17 +1,48 @@
 <template>
-    <v-container class="ClubSearch">
-      <h1>메인 페이지</h1>
-      <p>로그인 성공 시 이 페이지로 이동합니다.</p>
+  <v-app class="ClubSearch">
+    <!-- 상단 바 (예시) -->
+    <v-app-bar app color="black" dark>
+      <v-container>
+        <v-row align="center" justify="space-between">
+          <v-col>
+            <v-toolbar-title>동아리 검색</v-toolbar-title>
+          </v-col>
+          <!-- 오른쪽에 + 버튼 추가 -->
+          <v-col class="info-buttons" cols="auto">
+            <v-btn icon color="white" @click="navigateToAddClub">
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-app-bar>
+
+    <!-- 동아리 검색 페이지의 컨텐츠 -->
+    <v-container class="search-content">
+      <!-- 여기에 검색 UI 요소 추가 -->
     </v-container>
-  </template>
-  
-  <script>
-  export default {
-    name: "clubSearch",
-  };
-  </script>
-  
-  <style scoped>
-  /* 스타일을 여기에 추가하세요 */
-  </style>
+  </v-app>
+</template>
+
+<script>
+export default {
+  name : "clubSearch",
+  methods: {
+    navigateToAddClub() {
+      this.$router.push({ name: 'AddClub' }); // AddClub 페이지로 이동
+    }
+  }
+};
+</script>
+
+<style scoped>
+.club-search-page {
+  background-color: #f5f5f5; /* 배경 색상 */
+}
+
+.info-buttons {
+  display: flex;
+  gap: 10px;
+}
+</style>
   
