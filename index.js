@@ -58,6 +58,8 @@ import AccountLogin from '@/views/AccountLogin.vue';
 import MainPage from '@/views/mainPage.vue';
 import MyClub from '@/views/MyClub.vue'; // MyClub.vue 컴포넌트 경로
 import ClubSearch from '@/views/ClubSearch.vue'; // ClubSearch.vue 컴포넌트 경로
+import AddClub from '@/views/AddClub.vue';
+import ClubDetail from '@/views/ClubDetail.vue';
 
 const routes = [
   {
@@ -94,6 +96,17 @@ const routes = [
     path: '/clubSearch',
     name: 'clubSearch',
     component: ClubSearch // ClubSearch.vue 컴포넌트 추가
+  },
+  {
+    path: '/addclub',
+    name: 'AddClub',
+    component: AddClub
+  },
+  {
+    path: '/club/:id',
+    name: 'ClubDetail',
+    component: ClubDetail,
+    props: true // 이 설정으로 라우트 파라미터를 props 로 전달
   }
 ];
 
