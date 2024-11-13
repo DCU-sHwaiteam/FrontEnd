@@ -21,6 +21,12 @@
           v-model="leaderId"
           required
         ></v-text-field>
+
+        <v-text-field
+          label="동아리 장 아이디"
+          v-model="leaderId"     // 추후 수정
+          required
+        ></v-text-field>
   
         <v-text-field
           label="지도 교수"
