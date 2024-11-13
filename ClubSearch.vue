@@ -8,8 +8,11 @@
             <v-toolbar-title>동아리 검색</v-toolbar-title>
           </v-col>
           <v-col class="info-buttons" cols="auto">
-            <v-btn icon color="white" @click="navigateToAddClub">
+            <v-btn icon color="white" @click="navigateToAddClub" title="동아리 추가">
               <v-icon>mdi-plus</v-icon>
+            </v-btn>
+            <v-btn icon color="white" @click="drawer = true" title="메뉴">
+              <v-icon>mdi-menu</v-icon>
             </v-btn>
           </v-col>
         </v-row>
@@ -63,16 +66,32 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 오른쪽에서 나오는 슬라이드 네비게이션 메뉴 -->
+    <v-navigation-drawer v-model="drawer" app temporary location="right" dark color="rgba(0, 0, 0, 0.8)">
+      <v-list>
+        <v-list-item @click="navigateTo('mainPage')">
+          <v-list-item-title class="white-text">메인 페이지</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="navigateTo('myClub')">
+          <v-list-item-title class="white-text">내 동아리</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="navigateTo('clubSearch')">
+          <v-list-item-title class="white-text">동아리 검색</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
   </v-app>
 </template>
 
 <script>
 export default {
-  name : "clubSearch",
+  name: "clubSearch",
   data() {
     return {
       searchQuery: '',
       dialog: false,
+      drawer: false,
       selectedClub: {},
       clubs: [
         {
@@ -99,7 +118,6 @@ export default {
           tags: '음악, 연주',
           description: '음악을 좋아하는 사람들의 모임입니다.'
         }
-        // 추가 예시 데이터...
       ]
     };
   },
@@ -111,6 +129,10 @@ export default {
     }
   },
   methods: {
+    navigateTo(routeName) {
+      this.$router.push({ name: routeName });
+      this.drawer = false;
+    },
     navigateToAddClub() {
       this.$router.push({ name: 'AddClub' });
     },
@@ -142,6 +164,14 @@ export default {
 
 .list-card:hover {
   transform: translateY(-4px);
+}
+
+.v-navigation-drawer__content {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.white-text {
+  color: white !important;
 }
 </style>
   
