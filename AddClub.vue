@@ -24,7 +24,7 @@
 
         <v-text-field
           label="동아리 장 아이디"
-          v-model="leaderId"     // 추후 수정
+          v-model="leaderMail"
           required
         ></v-text-field>
   
