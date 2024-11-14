@@ -88,11 +88,6 @@ const routes = [
     component: MainPage
   },
   {
-    path: '/myClub',
-    name: 'myClub',
-    component: MyClub // MyClub.vue 컴포넌트 추가
-  },
-  {
     path: '/clubSearch',
     name: 'clubSearch',
     component: ClubSearch // ClubSearch.vue 컴포넌트 추가
