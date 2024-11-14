@@ -4,11 +4,9 @@
     <v-app-bar app color="black" dark>
       <v-container>
         <v-row align="center" justify="space-between">
-          <!-- 왼쪽: DCU 동아리 텍스트 -->
           <v-col>
             <v-toolbar-title class="title">DCU 동아리</v-toolbar-title>
           </v-col>
-          <!-- 오른쪽: 내 정보, 로그아웃 버튼 -->
           <v-col class="info-buttons" cols="auto">
             <v-btn text color="white" @click="navigateTo('myProfile')">내 정보</v-btn>
             <v-btn text color="white" @click="logout">로그아웃</v-btn>
@@ -21,7 +19,7 @@
     <v-container class="center-content">
       <v-row justify="center" class="button-row">
         <v-col cols="12" sm="8" md="6">
-          <v-card class="list-card" @click="navigateTo('myClub')" hover>
+          <v-card class="list-card" @click="openMyClubPopup" hover>
             <v-card-title>내 동아리</v-card-title>
             <v-card-subtitle>내 동아리를 관리하고 확인하세요</v-card-subtitle>
           </v-card>
@@ -32,14 +30,52 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- 내 동아리 팝업 -->
+    <v-dialog v-model="showMyClubPopup" max-width="500px">
+      <v-card>
+        <v-card-title>가입된 동아리 목록</v-card-title>
+        <v-divider></v-divider>
+        <v-list>
+          <v-list-item
+            v-for="club in approvedClubs"
+            :key="club.id"
+            @click="navigateToClubDetail(club.id)"
+          >
+            <v-list-item-content>
+              <v-list-item-title>{{ club.name }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+        <v-card-actions>
+          <v-btn color="grey" text @click="showMyClubPopup = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
 <script>
 export default {
+  data() {
+    return {
+      showMyClubPopup: false,
+      approvedClubs: [
+        { id: '1', name: '축구 동아리' },
+        { id: '2', name: '음악 동아리' }
+      ]
+    };
+  },
   methods: {
+    openMyClubPopup() {
+      this.showMyClubPopup = true;
+    },
     navigateTo(routeName) {
       this.$router.push({ name: routeName });
+    },
+    navigateToClubDetail(clubId) {
+      this.$router.push({ name: 'ClubDetail', params: { id: clubId } });
+      this.showMyClubPopup = false;
     },
     logout() {
       console.log("로그아웃되었습니다.");
