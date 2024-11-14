@@ -1,71 +1,118 @@
 <template>
-    <v-container>
-      <h2>{{ club.name }} 출석체크</h2>
-  
-      <!-- 출석체크 기능 -->
-      <v-btn color="primary" @click="markAttendance">출석 체크</v-btn>
-  
-      <!-- 가입 신청 검토 아이콘 버튼 -->
-      <v-btn icon color="primary" @click="openApplicationReview">
-        <v-icon>mdi-account-check</v-icon>
-      </v-btn>
-  
-      <!-- 가입 신청 검토 팝업 -->
-      <v-dialog v-model="applicationDialog" max-width="600px">
-        <v-card>
-          <v-card-title>가입 신청 검토</v-card-title>
-          <v-card-text>
-            <!-- 가입 신청 내역 표시 -->
-            <div v-for="applicant in club.applications" :key="applicant.id">
-              <p>{{ applicant.name }} ({{ applicant.id }})</p>
-              <v-btn @click="approveApplicant(applicant.id)">승인</v-btn>
-              <v-btn @click="rejectApplicant(applicant.id)">거부</v-btn>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="grey" @click="applicationDialog = false">닫기</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </v-container>
-  </template>
-  
-  <script>
-  export default {
-    props: ['id'], // 라우트에서 전달받은 동아리 ID
-    data() {
-      return {
-        club: {}, // 동아리 정보 저장
-        applicationDialog: false
-      };
+  <v-container>
+    <!-- 동아리 상세 정보 -->
+    <h1>{{ club.name }}</h1>
+    <p>동아리 장: {{ club.leader }}</p>
+    <p>소개: {{ club.description }}</p>
+
+    <!-- 메뉴 아이콘 (우측 하단 고정) -->
+    <v-btn
+      icon
+      color="white"
+      fab
+      @click="menuOpen = !menuOpen"
+      class="fixed-menu-icon"
+    >
+      <v-icon>mdi-menu</v-icon>
+    </v-btn>
+
+    <!-- 슬라이드 메뉴 -->
+    <transition name="slide-up">
+      <div v-if="menuOpen" class="menu-overlay">
+        <v-btn icon color="white" @click="openMembershipDialog" title="가입 승인 여부">
+          <v-icon>mdi-account-check</v-icon>
+        </v-btn>
+      </div>
+    </transition>
+
+    <!-- 신청자 관리 팝업 -->
+    <v-dialog v-model="membershipDialog" max-width="600px">
+      <v-card>
+        <v-card-title>가입 신청 관리</v-card-title>
+        <v-card-text>
+          <v-list>
+            <v-list-item v-for="applicant in applicants" :key="applicant.id">
+              <v-list-item-content>
+                <v-list-item-title>{{ applicant.name }} ({{ applicant.id }})</v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-btn color="green" @click="approveApplicant(applicant)">승인</v-btn>
+                <v-btn color="red" @click="rejectApplicant(applicant)">거부</v-btn>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="grey" @click="membershipDialog = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      menuOpen: false,
+      membershipDialog: false,
+      club: {
+        name: 'Sample Club',
+        leader: 'Sample Leader',
+        description: 'This is a sample club description.'
+      },
+      applicants: [
+        { id: '1', name: '신청자1' },
+        { id: '2', name: '신청자2' }
+      ]
+    };
+  },
+  methods: {
+    openMembershipDialog() {
+      this.membershipDialog = true;
     },
-    created() {
-      this.loadClubData();
+    approveApplicant(applicant) {
+      console.log(`${applicant.name} 승인됨`);
+      // 승인 처리 로직 추가
     },
-    methods: {
-      loadClubData() {
-        // 이곳에서 동아리 데이터를 불러옵니다 (예: API 또는 스토어에서 가져오기)
-        this.club = {
-          name: "동아리 이름",
-          applications: [
-            { id: "1001", name: "회원1" },
-            { id: "1002", name: "회원2" }
-          ]
-        };
-      },
-      markAttendance() {
-        console.log("출석 체크 완료");
-      },
-      openApplicationReview() {
-        this.applicationDialog = true;
-      },
-      approveApplicant(id) {
-        console.log(`${id} 회원 승인`);
-      },
-      rejectApplicant(id) {
-        console.log(`${id} 회원 거부`);
-      }
+    rejectApplicant(applicant) {
+      console.log(`${applicant.name} 거부됨`);
+      // 거부 처리 로직 추가
     }
-  };
-  </script>
+  }
+};
+</script>
+
+<style scoped>
+.fixed-menu-icon {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.menu-overlay {
+  position: fixed;
+  bottom: 72px;
+  right: 16px;
+  background-color: rgba(128, 128, 128, 0.8); /* 반투명 회색 */
+  padding: 8px;
+  border-radius: 16px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 11;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter, .slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+</style>
   
