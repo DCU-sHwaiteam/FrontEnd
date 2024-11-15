@@ -67,31 +67,97 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 생성된 출석 체크 리스트 -->
+    <v-row>
+      <v-col
+        v-for="(attendance, index) in attendanceList"
+        :key="index"
+        cols="12"
+        md="12"
+      >
+        <v-card class="pa-3 attendance-card">
+          <v-card-title>
+            <div>출석 날짜: {{ attendance.date }}</div>
+            <div>시간: {{ attendance.startTime }} ~ {{ attendance.endTime }}</div>
+            <div>방식: {{ attendance.type }}</div>
+          </v-card-title>
+          <v-card-actions>
+            <!-- 출석 버튼 (출석 방식이 PIN일 때만) -->
+            <v-btn
+              v-if="attendance.type === 'PIN'"
+              color="primary"
+              @click="checkAttendance(index)"
+              class="ml-auto attendance-btn"
+            >
+              출석
+            </v-btn>
+
+            <!-- 핀 번호 생성 버튼 (출석 방식이 PIN일 때만) -->
+            <v-btn
+              v-if="attendance.type === 'PIN'"
+              icon
+              color="secondary"
+              @click="generatePin(index)"
+              class="ml-2 pin-btn"
+            >
+              <v-icon>mdi-key-plus</v-icon>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script>
+import dayjs from "dayjs";
+
 export default {
   data() {
     return {
       showAttendanceDialog: false,
       dateMenu: false,
-      attendanceDate: '',
-      startTime: '',
-      endTime: '',
-      attendanceType: '',
-      attendanceTypes: ['PIN', 'QR', '와이파이']
+      attendanceDate: dayjs().format("YYYY-MM-DD"),
+      startTime: "",
+      endTime: "",
+      attendanceType: "",
+      attendanceTypes: ["PIN", "QR", "와이파이"],
+      attendanceList: [],
     };
   },
   methods: {
     saveAttendanceSettings() {
-      console.log("출석 날짜:", this.attendanceDate);
-      console.log("시작 시간:", this.startTime);
-      console.log("종료 시간:", this.endTime);
-      console.log("출석 방식:", this.attendanceType);
+      this.attendanceList.push({
+        date: this.attendanceDate || dayjs().format("YYYY-MM-DD"),
+        startTime: this.startTime || "00:00",
+        endTime: this.endTime || "23:59",
+        type: this.attendanceType || "미지정",
+        pin: null,
+      });
+      this.resetDialog();
       this.showAttendanceDialog = false;
-    }
-  }
+    },
+    resetDialog() {
+      this.attendanceDate = dayjs().format("YYYY-MM-DD");
+      this.startTime = "";
+      this.endTime = "";
+      this.attendanceType = "";
+    },
+    generatePin(index) {
+      const newPin = Math.floor(1000 + Math.random() * 9000); // 1000~9999
+      this.attendanceList[index].pin = newPin;
+      alert(`새로운 PIN이 생성되었습니다: ${newPin}`);
+    },
+    checkAttendance(index) {
+      const userPin = prompt("PIN 번호를 입력하세요:");
+      if (userPin === this.attendanceList[index].pin?.toString()) {
+        alert("출석 완료!");
+      } else {
+        alert("PIN 번호가 틀렸습니다.");
+      }
+    },
+  },
 };
 </script>
 
@@ -101,6 +167,25 @@ export default {
   top: 16px;
   right: 16px;
   z-index: 10;
+}
+
+/* 출석 체크 카드 스타일 */
+.attendance-card {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.attendance-btn {
+  margin-left: auto;
+}
+
+.pin-btn {
+  margin-left: 8px;
 }
 </style>
 
