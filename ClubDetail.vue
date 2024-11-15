@@ -19,8 +19,14 @@
     <!-- 슬라이드 메뉴 -->
     <transition name="slide-up">
       <div v-if="menuOpen" class="menu-overlay">
+        <!-- 가입 승인 여부 아이콘 -->
         <v-btn icon color="white" @click="openMembershipDialog" title="가입 승인 여부">
           <v-icon>mdi-account-check</v-icon>
+        </v-btn>
+        
+        <!-- 출석체크 아이콘 -->
+        <v-btn icon color="white" @click="navigateToAttendance" title="출석체크">
+          <v-icon>mdi-calendar-check</v-icon>
         </v-btn>
       </div>
     </transition>
@@ -59,7 +65,8 @@ export default {
       club: {
         name: 'Sample Club',
         leader: 'Sample Leader',
-        description: 'This is a sample club description.'
+        description: 'This is a sample club description.',
+        id: 123 // 예시 동아리 ID
       },
       applicants: [
         { id: '1', name: '신청자1' },
@@ -70,6 +77,10 @@ export default {
   methods: {
     openMembershipDialog() {
       this.membershipDialog = true;
+    },
+    navigateToAttendance() {
+      // 출석체크 페이지로 이동
+      this.$router.push({ name: 'AttendanceMember', params: { clubId: this.club.id } });
     },
     approveApplicant(applicant) {
       console.log(`${applicant.name} 승인됨`);
@@ -110,7 +121,8 @@ export default {
   transition: all 0.3s ease;
 }
 
-.slide-up-enter, .slide-up-leave-to {
+.slide-up-enter,
+.slide-up-leave-to {
   opacity: 0;
   transform: translateY(20px);
 }
