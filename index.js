@@ -56,10 +56,10 @@ import HomeView from '../views/HomeView.vue';
 import AccountRegister from '@/views/AccountRegister.vue';
 import AccountLogin from '@/views/AccountLogin.vue';
 import MainPage from '@/views/mainPage.vue';
-import MyClub from '@/views/MyClub.vue'; // MyClub.vue 컴포넌트 경로
 import ClubSearch from '@/views/ClubSearch.vue'; // ClubSearch.vue 컴포넌트 경로
 import AddClub from '@/views/AddClub.vue';
 import ClubDetail from '@/views/ClubDetail.vue';
+import AttendanceMember from '@/views/AttendanceMember.vue';
 
 const routes = [
   {
@@ -102,7 +102,13 @@ const routes = [
     name: 'ClubDetail',
     component: ClubDetail,
     props: true // 이 설정으로 라우트 파라미터를 props 로 전달
+  },
+  {
+    path: '/attendance/:clubId',
+    name: 'AttendanceMember',
+    component: AttendanceMember // 이 이름은 등록된 Vue 컴포넌트와 일치해야 함
   }
+
 ];
 
 const router = createRouter({
