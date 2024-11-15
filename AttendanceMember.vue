@@ -35,28 +35,20 @@
               <v-date-picker v-model="attendanceDate" @input="dateMenu = false"></v-date-picker>
             </v-menu>
 
-            <!-- 시작 시간 선택 -->
-            <v-text-field
-              v-model="startTime"
-              label="시작 시간"
-              type="time"
-              prepend-icon="mdi-clock-start"
-            ></v-text-field>
-
-            <!-- 종료 시간 선택 -->
-            <v-text-field
-              v-model="endTime"
-              label="종료 시간"
-              type="time"
-              prepend-icon="mdi-clock-end"
-            ></v-text-field>
-
             <!-- 출석 방식 선택 -->
             <v-select
               v-model="attendanceType"
               :items="attendanceTypes"
               label="출석 방식"
               prepend-icon="mdi-check"
+            ></v-select>
+
+            <!-- 출석 가능 시간 선택 -->
+            <v-select
+              v-model="attendanceDuration"
+              :items="['10', '20', '30', '40']"
+              label="출석 시간 (분)"
+              prepend-icon="mdi-clock-outline"
             ></v-select>
           </v-form>
         </v-card-text>
@@ -74,18 +66,21 @@
         v-for="(attendance, index) in attendanceList"
         :key="index"
         cols="12"
-        md="12"
+        md="6"
       >
-        <v-card class="pa-3 attendance-card">
+        <v-card class="pa-3" style="height: 200px;">
           <v-card-title>
             <div>출석 날짜: {{ attendance.date }}</div>
-            <div>시간: {{ attendance.startTime }} ~ {{ attendance.endTime }}</div>
-            <div>방식: {{ attendance.type }}</div>
+            <div>시간: {{ formatTime(attendance.startTime) }} ~ {{ formatTime(attendance.endTime) }}</div>
           </v-card-title>
+          <v-card-subtitle>
+            <div>방식: {{ attendance.type }}</div>
+            <div>설정된 시간: {{ attendance.duration }}분</div>
+          </v-card-subtitle>
           <v-card-actions>
             <!-- 출석 버튼 (출석 방식이 PIN일 때만) -->
             <v-btn
-              v-if="attendance.type === 'PIN'"
+              v-if="attendance.type === 'PIN' && isAttendanceOpen(attendance)"
               color="primary"
               @click="checkAttendance(index)"
               class="ml-auto attendance-btn"
@@ -119,30 +114,37 @@ export default {
       showAttendanceDialog: false,
       dateMenu: false,
       attendanceDate: dayjs().format("YYYY-MM-DD"),
-      startTime: "",
-      endTime: "",
-      attendanceType: "",
-      attendanceTypes: ["PIN", "QR", "와이파이"],
+      attendanceDuration: "",  // 출석 시간 선택 (10분, 20분, 30분, 40분)
+      attendanceType: "PIN",  // 출석 방식 기본값
+      attendanceTypes: ["PIN", "QR", "와이파이"],  // 출석 방식 항목들
       attendanceList: [],
     };
   },
   methods: {
     saveAttendanceSettings() {
+      // 출석 가능한 시간 설정
+      const duration = this.attendanceDuration ? parseInt(this.attendanceDuration) : 10;
+      const startTime = dayjs();  // 현재 시간
+      const endTime = startTime.add(duration, 'minute');  // 종료 시간 계산
+
       this.attendanceList.push({
         date: this.attendanceDate || dayjs().format("YYYY-MM-DD"),
-        startTime: this.startTime || "00:00",
-        endTime: this.endTime || "23:59",
+        startTime: startTime.format("HH:mm"),
+        endTime: endTime.format("HH:mm"),
         type: this.attendanceType || "미지정",
         pin: null,
+        duration: duration,  // 설정된 출석 가능 시간 (분)
+        startTimestamp: startTime.toISOString(),
+        endTimestamp: endTime.toISOString(),
       });
+
       this.resetDialog();
       this.showAttendanceDialog = false;
     },
     resetDialog() {
       this.attendanceDate = dayjs().format("YYYY-MM-DD");
-      this.startTime = "";
-      this.endTime = "";
-      this.attendanceType = "";
+      this.attendanceDuration = "";
+      this.attendanceType = "PIN";
     },
     generatePin(index) {
       const newPin = Math.floor(1000 + Math.random() * 9000); // 1000~9999
@@ -157,6 +159,19 @@ export default {
         alert("PIN 번호가 틀렸습니다.");
       }
     },
+    isAttendanceOpen(attendance) {
+      const currentTime = dayjs();
+      const startTime = dayjs(attendance.startTimestamp);
+      const endTime = dayjs(attendance.endTimestamp);
+      if (currentTime.isAfter(endTime)) {
+        alert("지각입니다!");
+        return false; // 출석 시간이 지나면 출석할 수 없음
+      }
+      return currentTime.isAfter(startTime) && currentTime.isBefore(endTime);
+    },
+    formatTime(time) {
+      return time ? time : "00:00";
+    }
   },
 };
 </script>
@@ -169,29 +184,17 @@ export default {
   z-index: 10;
 }
 
-/* 출석 체크 카드 스타일 */
-.attendance-card {
-  width: 100%;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-bottom: 16px;
-}
-
-.attendance-btn {
+.ml-auto {
   margin-left: auto;
 }
 
-.pin-btn {
-  margin-left: 8px;
+.pa-3 {
+  padding: 16px;
+}
+
+.attendance-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
 }
 </style>
-
-
-
-  
-  
-  
-  
