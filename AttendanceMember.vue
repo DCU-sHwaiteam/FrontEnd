@@ -46,7 +46,7 @@
             <!-- 출석 가능 시간 선택 -->
             <v-select
               v-model="attendanceDuration"
-              :items="['10', '20', '30', '40']"
+              :items="['1','10', '20', '30', '40']"
               label="출석 시간 (분)"
               prepend-icon="mdi-clock-outline"
             ></v-select>
@@ -63,8 +63,8 @@
     <!-- 생성된 출석 체크 리스트 -->
     <v-row>
       <v-col
-        v-for="attendance in attendanceList"
-        :key="attendance.date + attendance.startTime"
+        v-for="(attendance, index) in attendanceList"
+        :key="index"
         cols="12"
         md="6"
       >
@@ -94,7 +94,7 @@
             <v-btn
               v-if="attendance.type === 'PIN' && isAttendanceOpen(attendance)"
               color="primary"
-              @click="checkAttendance(attendance)"
+              @click="checkAttendance(index)"
               class="ml-auto attendance-btn"
             >
               출석
@@ -105,7 +105,7 @@
               v-if="attendance.type === 'PIN'"
               icon
               color="secondary"
-              @click="generatePin(attendance)"
+              @click="generatePin(index)"
               class="ml-2 pin-btn"
             >
               <v-icon>mdi-key-plus</v-icon>
@@ -184,9 +184,9 @@ export default {
         type: this.attendanceType || "미지정",
         pin: null,
         duration: duration,
+        status: '결석', // 출석 상태를 기본 '결석'으로 설정
         startTimestamp: startTime.toISOString(),
         endTimestamp: endTime.toISOString(),
-        status: '결석', // 출석 상태 초기값
       });
 
       this.resetDialog();
@@ -197,17 +197,26 @@ export default {
       this.attendanceDuration = "";
       this.attendanceType = "PIN";
     },
-    generatePin(attendance) {
+    generatePin(index) {
       const newPin = Math.floor(1000 + Math.random() * 9000);
-      attendance.pin = newPin;
+      this.attendanceList[index].pin = newPin;
       alert(`새로운 PIN이 생성되었습니다: ${newPin}`);
     },
-    checkAttendance(attendance) {
+    checkAttendance(index) {
       const userPin = prompt("PIN 번호를 입력하세요:");
-      if (userPin === attendance.pin?.toString()) {
+
+      // 출석 시간이 끝났는지 확인
+      const currentTime = dayjs();
+      const endTime = dayjs(this.attendanceList[index].endTimestamp);
+
+      if (currentTime.isAfter(endTime)) {
+        alert("지각입니다!");
+        // 출석 상태를 지각으로 변경
+        this.attendanceList[index].status = "지각";
+      } else if (userPin === this.attendanceList[index].pin?.toString()) {
         alert("출석 완료!");
-        // 출석 상태를 '출석'으로 변경
-        attendance.status = '출석';
+        // 출석 상태 업데이트
+        this.attendanceList[index].status = '출석';
       } else {
         alert("PIN 번호가 틀렸습니다.");
       }
