@@ -8,7 +8,7 @@
             <v-toolbar-title class="title">DCU 동아리</v-toolbar-title>
           </v-col>
           <v-col class="info-buttons" cols="auto">
-            <v-btn text color="white" @click="navigateTo('myProfile')">내 정보</v-btn>
+            <v-btn text color="white" @click="navigateTo('home')">내 정보</v-btn>
             <v-btn text color="white" @click="logout">로그아웃</v-btn>
           </v-col>
         </v-row>
@@ -79,6 +79,8 @@ export default {
     },
     logout() {
       console.log("로그아웃되었습니다.");
+      // 로그인 페이지로 이동
+      this.$router.push({ name: 'login' });
     }
   }
 };
