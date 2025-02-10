@@ -1,164 +1,96 @@
 <template>
   <v-container>
-    <!-- 동아리 상세 정보 -->
-    <h1>{{ club.name }}</h1>
-    <p>동아리 장: {{ club.leader }}</p>
-    <p>소개: {{ club.description }}</p>
+    <!-- 동아리 기본 정보 -->
+    <v-card class="club-info-card">
+      <v-card-title>{{ club.name }}</v-card-title>
+      <v-card-subtitle>동아리장: {{ club.leader }}</v-card-subtitle>
+      <v-card-text>{{ club.description }}</v-card-text>
+    </v-card>
 
-    <!-- 메뉴 아이콘 (우측 하단 고정) -->
-    <v-btn
-      icon
-      color="white"
-      fab
-      @click="menuOpen = !menuOpen"
-      class="fixed-menu-icon"
-    >
-      <v-icon>mdi-menu</v-icon>
-    </v-btn>
+    <!-- 탭 네비게이션 -->
+    <v-tabs v-model="activeTab">
+      <v-tab value="announcements">공지사항</v-tab>
+      <v-tab value="schedule">일정</v-tab>
+      <v-tab value="gallery">갤러리</v-tab>
+      <v-tab value="members" v-if="isAdmin">멤버 관리</v-tab>
+      <v-tab value="attendance" v-if="isAdmin">출석체크</v-tab>
+    </v-tabs>
 
-    <!-- 슬라이드 메뉴 -->
-    <transition name="slide-up">
-      <div v-if="menuOpen" class="menu-overlay">
-        <!-- 가입 승인 여부 아이콘 -->
-        <v-btn icon color="white" @click="openMembershipDialog" title="가입 승인 여부">
-          <v-icon>mdi-account-check</v-icon>
-        </v-btn>
-
-        <!-- 동아리 회원 확인 아이콘 -->
-        <v-btn icon color="white" @click="openMemberListDialog" title="회원 확인">
-          <v-icon>mdi-account-multiple</v-icon>
-        </v-btn>
-        
-        <!-- 출석체크 아이콘 -->
-        <v-btn icon color="white" @click="navigateToAttendance" title="출석체크">
-          <v-icon>mdi-calendar-check</v-icon>
-        </v-btn>
-      </div>
-    </transition>
-
-    <!-- 신청자 관리 팝업 -->
-    <v-dialog v-model="membershipDialog" max-width="600px">
-      <v-card>
-        <v-card-title>가입 신청 관리</v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item v-for="applicant in applicants" :key="applicant.id">
-              <v-list-item-content>
-                <v-list-item-title>{{ applicant.name }} ({{ applicant.id }})</v-list-item-title>
-              </v-list-item-content>
-              <v-list-item-action>
-                <v-btn color="green" @click="approveApplicant(applicant)">승인</v-btn>
-                <v-btn color="red" @click="rejectApplicant(applicant)">거부</v-btn>
-              </v-list-item-action>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="grey" @click="membershipDialog = false">닫기</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- 동아리 회원 확인 팝업 -->
-    <v-dialog v-model="memberListDialog" max-width="600px">
-      <v-card>
-        <v-card-title>동아리 회원 목록</v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item v-for="member in members" :key="member.id">
-              <v-list-item-content>
-                <v-list-item-title>{{ member.name }} ({{ member.id }})</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="grey" @click="memberListDialog = false">닫기</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- 탭 내용 -->
+    <v-window v-model="activeTab">
+      <v-window-item value="announcements">
+        <AnnouncementsTab :is-admin="isAdmin" />
+      </v-window-item>
+      <v-window-item value="schedule">
+        <ScheduleTab :is-admin="isAdmin" />
+      </v-window-item>
+      <v-window-item value="gallery">
+        <GalleryTab />
+      </v-window-item>
+      <v-window-item value="members" v-if="isAdmin">
+        <MembersTab />
+      </v-window-item>
+      <v-window-item value="attendance" v-if="isAdmin">
+        <AttendanceMember />
+      </v-window-item>
+    </v-window>
   </v-container>
 </template>
 
 <script>
+import AnnouncementsTab from '@/components/club/AnnouncementsTab.vue';
+import ScheduleTab from '@/components/club/ScheduleTab.vue';
+import GalleryTab from '@/components/club/GalleryTab.vue';
+import MembersTab from '@/components/club/MembersTab.vue';
+import AttendanceMember from '@/components/club/AttendanceMember.vue';
 export default {
+  components: {
+    AnnouncementsTab,
+    ScheduleTab,
+    GalleryTab,
+    MembersTab,
+    AttendanceMember
+  },
   data() {
     return {
-      menuOpen: false,
-      membershipDialog: false,
-      memberListDialog: false,
+      activeTab: 'announcements',
       club: {
-        name: 'Sample Club',
-        leader: 'Sample Leader',
-        description: 'This is a sample club description.',
-        id: 123 // 예시 동아리 ID
+        name: "",
+        leader: "",
+        description: ""
       },
-      applicants: [
-        { id: '1', name: '신청자1' },
-        { id: '2', name: '신청자2' }
-      ],
-      members: [
-        { id: '101', name: '회원1' },
-        { id: '102', name: '회원2' }
-      ] // 초기 동아리 회원 목업 데이터
+      isAdmin: true // 이후에 사용자 역할과 연동 필요
     };
   },
   methods: {
-    openMembershipDialog() {
-      this.membershipDialog = true;
-    },
-    openMemberListDialog() {
-      this.memberListDialog = true;
-    },
-    navigateToAttendance() {
-      this.$router.push({ name: 'AttendanceMember', params: { clubId: this.club.id } });
-    },
-    approveApplicant(applicant) {
-      console.log(`${applicant.name} 승인됨`);
-      // 승인 처리 로직: 신청자를 회원으로 추가
-      this.members.push(applicant);
-      // 신청자 리스트에서 제거
-      this.applicants = this.applicants.filter(a => a.id !== applicant.id);
-    },
-    rejectApplicant(applicant) {
-      console.log(`${applicant.name} 거부됨`);
-      // 거부 처리 로직
+    loadClubData() {
+      const clubId = this.$route.params.id || localStorage.getItem("selectedClubId");  // URL 또는 로컬스토리지에서 ID 가져오기
+      const savedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
+
+      // 선택한 동아리 찾기
+      const selectedClub = savedClubs.find(club => club.id === clubId);
+
+      if (selectedClub) {
+        this.club = selectedClub;
+      } else {
+        console.error("해당 동아리를 찾을 수 없습니다.");
+      }
+
+      // 저장된 회원 & 신청자 정보 불러오기 (로컬 저장소 활용)
+      this.members = JSON.parse(localStorage.getItem(`club_${clubId}_members`)) || [];
+      this.applicants = JSON.parse(localStorage.getItem(`club_${clubId}_applicants`)) || [];
     }
-  }
+  },
+  mounted() {
+  this.loadClubData();  // 페이지 로드 시 동아리 정보 불러오기
+}
 };
 </script>
 
 <style scoped>
-.fixed-menu-icon {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 10;
-}
-
-.menu-overlay {
-  position: fixed;
-  bottom: 72px;
-  right: 16px;
-  background-color: rgba(128, 128, 128, 0.8); /* 반투명 회색 */
-  padding: 8px;
-  border-radius: 16px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 11;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
+.club-info-card {
+  margin-bottom: 20px;
+  padding: 20px;
 }
 </style>
   
