@@ -69,8 +69,13 @@ export default {
       this.showMyClubPopup = true;
     },
     loadApprovedClubs() {
-      const savedClubs = JSON.parse(localStorage.getItem('appliedClubs')) || [];
-      this.approvedClubs = savedClubs; // 불러온 데이터를 적용
+      const savedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
+      const myClubs = JSON.parse(localStorage.getItem("myClubs")) || [];
+
+      // 저장된 myClubs에 있는 동아리만 approvedClubs에 저장
+      this.approvedClubs = myClubs.filter(myClub =>
+        savedClubs.some(club => club.id === myClub.id)
+      );
     },
     navigateTo(routeName) {
       this.$router.push({ name: routeName });
