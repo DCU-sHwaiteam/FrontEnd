@@ -64,6 +64,7 @@
         <v-card-actions>
           <v-btn color="primary" @click="applyClub">신청</v-btn>
           <v-btn color="grey" @click="dialog = false">나가기</v-btn>
+          <v-btn color="red" @click.stop="deleteClub(selectedClub.id)">삭제</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -78,32 +79,7 @@ export default {
       searchQuery: '',
       dialog: false,
       selectedClub: {},
-      clubs: [
-        {
-          id: '20230001',
-          name: '축구 동아리',
-          leader: '김동아',
-          leaderId: '12345678',
-          advisor: '박교수',
-          maxMembers: 20,
-          currentMembers: 15,
-          activitySchedule: '매주 화요일 5시',
-          tags: '운동, 축구',
-          description: '매주 축구 연습을 함께하는 동아리입니다.'
-        },
-        {
-          id: '20230002',
-          name: '음악 동아리',
-          leader: '박음악',
-          leaderId: '87654321',
-          advisor: '이교수',
-          maxMembers: 15,
-          currentMembers: 10,
-          activitySchedule: '매주 금요일 6시',
-          tags: '음악, 연주',
-          description: '음악을 좋아하는 사람들의 모임입니다.'
-        }
-      ]
+      clubs: [] // 기존 하드코딩된 데이터 제거
     };
   },
   computed: {
@@ -125,12 +101,67 @@ export default {
       this.dialog = true;
     },
     applyClub() {
-      console.log(`${this.selectedClub.name}에 신청하였습니다.`);
+      // 기존 신청 내역 불러오기
+      let appliedClubs = JSON.parse(localStorage.getItem('appliedClubs')) || [];
+
+      // 중복 신청 방지
+      const alreadyApplied = appliedClubs.some(club => club.id === this.selectedClub.id);
+      if (!alreadyApplied) {
+        appliedClubs.push(this.selectedClub);
+        localStorage.setItem('appliedClubs', JSON.stringify(appliedClubs)); // 저장
+      } else {
+        alert("이미 신청한 동아리입니다!");
+      }
+
+      console.log(`${this.selectedClub.name}에 신청 완료!`);
       this.dialog = false;
+    },
+    deleteClub(clubId) {  // ❌ 동아리 삭제 기능 추가
+      this.clubs = this.clubs.filter(club => club.id !== clubId);
+      localStorage.setItem('clubs', JSON.stringify(this.clubs)); // 변경된 데이터 저장
+    },
+    loadClubs() {  // 📥 localStorage에서 데이터 불러오기
+      const savedClubs = localStorage.getItem('clubs');
+      if (savedClubs) {
+        this.clubs = JSON.parse(savedClubs);
+      } else {
+        // 기본 데이터 설정 (최초 1회)
+        this.clubs = [
+          {
+            id: '20230001',
+            name: '축구 동아리',
+            leader: '김동아',
+            leaderId: '12345678',
+            advisor: '박교수',
+            maxMembers: 20,
+            currentMembers: 15,
+            activitySchedule: '매주 화요일 5시',
+            tags: '운동, 축구',
+            description: '매주 축구 연습을 함께하는 동아리입니다.'
+          },
+          {
+            id: '20230002',
+            name: '음악 동아리',
+            leader: '박음악',
+            leaderId: '87654321',
+            advisor: '이교수',
+            maxMembers: 15,
+            currentMembers: 10,
+            activitySchedule: '매주 금요일 6시',
+            tags: '음악, 연주',
+            description: '음악을 좋아하는 사람들의 모임입니다.'
+          }
+        ];
+        localStorage.setItem('clubs', JSON.stringify(this.clubs));
+      }
     }
+  },
+  mounted() {
+    this.loadClubs(); // 🔄 페이지 로드시 데이터 불러오기
   }
 };
 </script>
+
 
 <style scoped>
 .search-container {
