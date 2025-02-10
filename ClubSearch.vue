@@ -102,15 +102,12 @@ export default {
     },
     applyClub() {
       // 기존 신청 내역 불러오기
-      let appliedClubs = JSON.parse(localStorage.getItem('appliedClubs')) || [];
-
-      // 중복 신청 방지
-      const alreadyApplied = appliedClubs.some(club => club.id === this.selectedClub.id);
-      if (!alreadyApplied) {
-        appliedClubs.push(this.selectedClub);
-        localStorage.setItem('appliedClubs', JSON.stringify(appliedClubs)); // 저장
-      } else {
-        alert("이미 신청한 동아리입니다!");
+      let myClubs = JSON.parse(localStorage.getItem("myClubs")) || [];
+    
+      // 중복 추가 방지
+      if (!myClubs.some(club => club.id === this.selectedClub.id)) {
+        myClubs.push(this.selectedClub);
+        localStorage.setItem("myClubs", JSON.stringify(myClubs));
       }
 
       console.log(`${this.selectedClub.name}에 신청 완료!`);
@@ -118,7 +115,12 @@ export default {
     },
     deleteClub(clubId) {  // ❌ 동아리 삭제 기능 추가
       this.clubs = this.clubs.filter(club => club.id !== clubId);
-      localStorage.setItem('clubs', JSON.stringify(this.clubs)); // 변경된 데이터 저장
+      localStorage.setItem('clubs', JSON.stringify(this.clubs));
+
+      // 신청한 동아리(myClubs)에서도 삭제
+      let myClubs = JSON.parse(localStorage.getItem("myClubs")) || [];
+      myClubs = myClubs.filter(club => club.id !== clubId);
+      localStorage.setItem("myClubs", JSON.stringify(myClubs));
     },
     loadClubs() {  // 📥 localStorage에서 데이터 불러오기
       const savedClubs = localStorage.getItem('clubs');
