@@ -18,13 +18,13 @@
   
         <v-text-field
           label="동아리 장 학번"
-          v-model="leaderId"
+          v-model="leaderMail"
           required
         ></v-text-field>
 
         <v-text-field
           label="동아리 장 아이디"
-          v-model="leaderMail"
+          v-model="leaderId"
           required
         ></v-text-field>
   
@@ -71,33 +71,51 @@
   </template>
   
   <script>
-  export default {
-    data() {
-      return {
-        clubName: '',
-        leaderName: '',
-        leaderId: '',
-        advisor: '',
-        maxMembers: '',
-        activitySchedule: '',
-        tags: '',
-        description: '',
-        isFormValid: false, // 폼 유효성 확인
-      };
+export default {
+  data() {
+    return {
+      clubName: '',
+      leaderName: '',
+      leaderId: '',
+      advisor: '',
+      maxMembers: '',
+      activitySchedule: '',
+      tags: '',
+      description: '',
+      isFormValid: false,
+    };
+  },
+  methods: {
+    navigateToSearch() {
+      this.$router.push({ name: 'clubSearch' });
     },
-    methods: {
-      navigateToSearch() {
-        this.$router.push({ name: 'clubSearch' }); // 동아리 검색 페이지로 이동
-      },
-      registerClub() {
-        if (this.isFormValid) {
-          console.log("동아리가 등록되었습니다.");
-          // 동아리 등록 로직을 추가
-        }
+    registerClub() {
+      if (this.isFormValid) {
+        const newClub = {
+          id: Date.now().toString(), // ✅ 동아리 ID를 현재 시간으로 생성 (유니크한 값)
+          name: this.clubName,
+          leader: this.leaderName,
+          leaderId: this.leaderId,
+          advisor: this.advisor,
+          maxMembers: this.maxMembers,
+          currentMembers: 0,
+          activitySchedule: this.activitySchedule,
+          tags: this.tags,
+          description: this.description
+        };
+
+        let clubs = JSON.parse(localStorage.getItem('clubs')) || [];
+        clubs.push(newClub);
+        localStorage.setItem('clubs', JSON.stringify(clubs));
+
+        console.log("동아리가 등록되었습니다.");
+        this.navigateToSearch();
       }
     }
-  };
-  </script>
+  }
+};
+</script>
+
   
   <style scoped>
   .button-row {
