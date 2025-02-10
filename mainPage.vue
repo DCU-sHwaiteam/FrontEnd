@@ -60,15 +60,17 @@ export default {
   data() {
     return {
       showMyClubPopup: false,
-      approvedClubs: [
-        { id: '1', name: '축구 동아리' },
-        { id: '2', name: '음악 동아리' }
-      ]
+      approvedClubs: [] // 기존 하드코딩 데이터를 제거
     };
   },
   methods: {
     openMyClubPopup() {
+      this.loadApprovedClubs(); // 신청한 동아리 목록 불러오기
       this.showMyClubPopup = true;
+    },
+    loadApprovedClubs() {
+      const savedClubs = JSON.parse(localStorage.getItem('appliedClubs')) || [];
+      this.approvedClubs = savedClubs; // 불러온 데이터를 적용
     },
     navigateTo(routeName) {
       this.$router.push({ name: routeName });
@@ -82,6 +84,9 @@ export default {
       // 로그인 페이지로 이동
       this.$router.push({ name: 'login' });
     }
+  },
+  mounted() {
+    this.loadApprovedClubs(); // 페이지 로드 시 신청된 동아리 목록 불러오기
   }
 };
 </script>
