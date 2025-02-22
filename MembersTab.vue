@@ -63,6 +63,11 @@
             <div class="name">{{ member.name }}</div>
             <div class="details">{{ member.major }} | {{ member.studentId }}</div>
           </div>
+
+          <!-- 삭제 버튼 -->
+          <div class="button-container">
+            <v-btn color="red" @click="removeMember(index)">삭제</v-btn>
+          </div>
         </div>
       </v-list-item>
     </v-list>
@@ -88,11 +93,18 @@ export default {
       const approvedMember = this.applications.splice(index, 1)[0];
 
       if (!this.members.some(member => member.studentId === approvedMember.studentId)) {
-        this.members.push(approvedMember);
+        // ✅ Vue가 반응형으로 감지할 수 있도록 새로운 배열을 할당!
+        this.members = [...this.members, approvedMember];
         localStorage.setItem("clubMembers", JSON.stringify(this.members));
       }
 
       localStorage.setItem("clubApplications", JSON.stringify(this.applications));
+    },
+    removeMember(index) {
+      // ✅ 특정 멤버 삭제
+      this.members.splice(index, 1);
+      this.members = [...this.members]; // Vue가 반응하도록 새 배열 할당
+      localStorage.setItem("clubMembers", JSON.stringify(this.members));
     }
   }
 };
@@ -133,7 +145,7 @@ export default {
   text-align: left;
 }
 
-/* ✅ 승인 버튼 컨테이너 */
+/* ✅ 버튼 컨테이너 */
 .button-container {
   flex: 0 0 auto;
   margin-left: auto; /* 오른쪽 끝으로 이동 */
