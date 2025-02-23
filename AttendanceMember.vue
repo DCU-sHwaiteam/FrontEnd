@@ -59,10 +59,10 @@
               출석
             </v-btn>
             
-            <!-- 핀 번호 생성 버튼 (관리자만) -->
-            <v-btn v-if="isAdmin && attendance.type === 'PIN'" color="secondary" @click="generatePin(index)" class="ml-2">
-              PIN 생성
-            </v-btn>
+            <!-- 핀 번호 표시 (자동 변경됨) -->
+            <v-chip v-if="isAdmin && attendance.type === 'PIN'" color="secondary" class="ml-2">
+              PIN: {{ attendance.pin }}
+            </v-chip>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -84,6 +84,7 @@ export default {
       attendanceTypes: ["PIN", "QR", "와이파이"],
       attendanceList: [],
       isAdmin: true, // 관리자 여부 (추후 실제 권한 시스템 적용 필요)
+      pinUpdateInterval: 30 * 1000, // 30초마다 변경
     };
   },
   methods: {
@@ -91,13 +92,14 @@ export default {
       const duration = this.attendanceDuration ? parseInt(this.attendanceDuration) : 10;
       const startTime = dayjs();
       const endTime = startTime.add(duration, "minute");
+      const newPin = this.generateNewPin();
 
       this.attendanceList.push({
         date: this.attendanceDate || dayjs().format("YYYY-MM-DD"),
         startTime: startTime.format("HH:mm"),
         endTime: endTime.format("HH:mm"),
         type: this.attendanceType || "미지정",
-        pin: null,
+        pin: newPin,
         duration: duration,
         status: '결석',
         startTimestamp: startTime.toISOString(),
@@ -106,6 +108,7 @@ export default {
 
       this.resetDialog();
       this.showAttendanceDialog = false;
+      this.startPinUpdate();
     },
     resetDialog() {
       this.attendanceDate = dayjs().format("YYYY-MM-DD");
@@ -113,24 +116,38 @@ export default {
       this.attendanceType = "PIN";
     },
     checkAttendance(index) {
+      const attendance = this.attendanceList[index];
+      if (!this.isAttendanceOpen(attendance)) {
+        alert("시간 초과로 출석이 불가능합니다.");
+        attendance.status = '결석';
+        return;
+      }
+      
       const userPin = prompt("PIN 번호를 입력하세요:");
-      if (userPin === this.attendanceList[index].pin?.toString()) {
+      if (userPin === attendance.pin?.toString()) {
         alert("출석 완료!");
-        this.attendanceList[index].status = '출석';
+        attendance.status = '출석';
       } else {
         alert("PIN 번호가 틀렸습니다.");
       }
-    },
-    generatePin(index) {
-      const newPin = Math.floor(1000 + Math.random() * 9000);
-      this.attendanceList[index].pin = newPin;
-      alert(`새로운 PIN 번호: ${newPin}`);
     },
     isAttendanceOpen(attendance) {
       const currentTime = dayjs();
       const startTime = dayjs(attendance.startTimestamp);
       const endTime = dayjs(attendance.endTimestamp);
       return currentTime.isAfter(startTime) && currentTime.isBefore(endTime);
+    },
+    generateNewPin() {
+      return Math.floor(1000 + Math.random() * 9000);
+    },
+    startPinUpdate() {
+      setInterval(() => {
+        this.attendanceList.forEach(attendance => {
+          if (attendance.type === "PIN" && this.isAttendanceOpen(attendance)) {
+            attendance.pin = this.generateNewPin();
+          }
+        });
+      }, this.pinUpdateInterval);
     },
     formatTime(time) {
       return time ? time : "00:00";
@@ -165,3 +182,4 @@ export default {
   color: red;
 }
 </style>
+
