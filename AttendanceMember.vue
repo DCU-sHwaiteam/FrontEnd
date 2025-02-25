@@ -39,7 +39,7 @@
     <!-- 생성된 출석 체크 리스트 -->
     <v-row>
       <v-col v-for="(attendance, index) in attendanceList" :key="index" cols="12" md="6">
-        <v-card class="pa-3 attendance-card">
+        <v-card class="pa-3 attendance-card" :class="{'present': attendance.status === '출석', 'absent': attendance.status === '결석'}">
           <v-card-title>
             <div>출석 날짜: {{ attendance.date }}</div>
             <div>시간: {{ formatTime(attendance.startTime) }} ~ {{ formatTime(attendance.endTime) }}</div>
@@ -159,13 +159,36 @@ export default {
 <style scoped>
 .attendance-card {
   height: 220px;
-  border-radius: 10px;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15);
   padding: 15px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  background-color: #f7f9fc; /* 부드러운 파스텔톤 */
+}
+
+.attendance-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 출석 상태별 카드 배경색 변경 */
+.attendance-card.present {
+  background-color: #e6f7e6; /* 연한 초록색 */
+}
+
+.attendance-card.absent {
+  background-color: #fdecea; /* 연한 빨간색 */
 }
 
 .attendance-btn {
   font-weight: bold;
+  border-radius: 20px;
+  padding: 8px 16px;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.attendance-btn:hover {
+  transform: scale(1.05);
 }
 
 .status-text {
@@ -175,11 +198,18 @@ export default {
 }
 
 .status-text.present {
-  color: green;
+  color: #2e7d32; /* 진한 초록색 */
 }
 
 .status-text.absent {
-  color: red;
+  color: #c62828; /* 진한 빨간색 */
+}
+
+/* PIN 번호 칩 스타일 */
+.v-chip {
+  font-weight: bold;
+  background-color: #d1c4e9; /* 연한 보라색 */
+  color: #4a148c; /* 진한 보라색 */
 }
 </style>
 
