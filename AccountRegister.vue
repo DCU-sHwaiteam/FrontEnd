@@ -24,7 +24,28 @@
                 v-model="formData.name"
                 :counter="10"
                 :rules="nameRules"
-                label="Name"
+                label="이름"
+                required
+              ></v-text-field>
+
+              <v-text-field
+                v-model="formData.studentId"
+                :rules="studentIdRules"
+                label="학번"
+                required
+              ></v-text-field>
+
+              <v-text-field
+                v-model="formData.department"
+                :rules="departmentRules"
+                label="학과"
+                required
+              ></v-text-field>
+
+              <v-text-field
+                v-model="formData.phone"
+                :rules="phoneRules"
+                label="전화번호"
                 required
               ></v-text-field>
 
@@ -69,7 +90,6 @@
                   회원가입
                 </v-btn>
 
-                <!-- 돌아가기 버튼 추가 -->
                 <v-btn color="grey" class="mr-4" @click="goToLogin">
                   돌아가기
                 </v-btn>
@@ -88,40 +108,53 @@ import axios from "axios";
 
 export default {
   data: () => ({
-    formData: new RegisterObj("", "", ""),
+    formData: new RegisterObj("", "", "", "", "", ""), // 새로운 필드 추가
     valid: false,
-    nameRules: [
-      (v) => !!v || "Name is required",
-      (v) => (v && v.length <= 10) || "Name must be less than 10 characters",
-    ],
     isError: false,
     errorMsg: "",
-    emailRules: [
-      (v) => !!v || "E-mail is required",
-      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-    ],
     show: false,
     chkPassword: "",
     rules: {
       required: (value) => !!value || "Required.",
       min: (v) => v.length >= 8 || "Min 8 characters",
     },
+    nameRules: [
+      (v) => !!v || "Name is required",
+      (v) => (v && v.length <= 10) || "Name must be less than 10 characters",
+    ],
+    emailRules: [
+      (v) => !!v || "E-mail is required",
+      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
+    ],
+    studentIdRules: [(v) => !!v || "Student ID is required"],
+    departmentRules: [(v) => !!v || "Department is required"],
+    phoneRules: [
+      (v) => !!v || "Phone number is required",
+      (v) => /^\d{10,11}$/.test(v) || "Enter a valid phone number",
+    ],
   }),
   methods: {
     goToMain() {
       this.$router.push({ name: "login" });
     },
     sameChk(password) {
-      if (this.formData.password == password) return true;
+      if (this.formData.password === password) return true;
       else {
         this.valid = false;
         return false;
       }
     },
     register(RegisterObj) {
-      if (!this.formData.email || !this.formData.name || !this.formData.password) {
+      if (
+        !this.formData.email ||
+        !this.formData.name ||
+        !this.formData.studentId ||
+        !this.formData.department ||
+        !this.formData.phone ||
+        !this.formData.password
+      ) {
         this.isError = true;
-        this.errorMsg = "이메일과 닉네임과 비밀번호를 모두 입력해주세요.";
+        this.errorMsg = "모든 필드를 입력해주세요.";
         return;
       }
       axios
@@ -146,7 +179,6 @@ export default {
       this.$refs.form.resetValidation();
     },
     goToLogin() {
-      // 로그인 페이지로 이동
       this.$router.push({ name: "login" });
     },
   },
