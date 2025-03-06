@@ -1,37 +1,31 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = "http://127.0.0.1:8000/api/";
+const API_URL = 'http://localhost:8000/api/';
 
-// 회원가입
-export const registerUser = async (userData) => {
+export const register = async (userData) => {
   try {
-    const payload = {
-      username: userData.email,  // Django에서 username 필수 → email을 username으로 저장
+    const response = await axios.post(`${API_URL}register/`, {
       email: userData.email,
       student_id: userData.studentId,
       department: userData.department,
       phone: userData.phone,
       password: userData.password,
-    };
-
-    console.log("Sending data:", payload);
-
-    const response = await axios.post(`${API_URL}users/`, payload);
+    });
     return response.data;
   } catch (error) {
-    console.error("Error during registration:", error.response ? error.response.data : error);
-    throw error.response ? error.response.data : error;
+    throw error.response.data;
   }
 };
 
-// 로그인
-export const loginUser = async (credentials) => {
+export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_URL}login/`, credentials);
+    const response = await axios.post(`${API_URL}login/`, {
+      email: email, // 기존: { email: { username, password } }
+      password: password
+    });
     return response.data;
   } catch (error) {
-    console.error("Login failed:", error.response ? error.response.data : error);
-    throw error.response ? error.response.data : error;
+    throw error.response.data;
   }
 };
 
