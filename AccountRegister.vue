@@ -103,12 +103,12 @@
 </template>
 
 <script>
+import { register } from "@/services/authService"; // 서비스 파일 import
 import RegisterObj from "../store/resisterObj";
-import axios from "axios";
 
 export default {
   data: () => ({
-    formData: new RegisterObj("", "", "", "", "", ""), // 새로운 필드 추가
+    formData: new RegisterObj("", "", "", "", "", ""),
     valid: false,
     isError: false,
     errorMsg: "",
@@ -134,17 +134,13 @@ export default {
     ],
   }),
   methods: {
-    goToMain() {
+    goToLogin() {
       this.$router.push({ name: "login" });
     },
     sameChk(password) {
-      if (this.formData.password === password) return true;
-      else {
-        this.valid = false;
-        return false;
-      }
+      return this.formData.password === password;
     },
-    register(RegisterObj) {
+    async register() {
       if (
         !this.formData.email ||
         !this.formData.name ||
@@ -157,29 +153,17 @@ export default {
         this.errorMsg = "모든 필드를 입력해주세요.";
         return;
       }
-      axios
-        .post("/signup", RegisterObj)
-        .then(() => {
-          this.goToMain();
-        })
-        .catch((err) => {
-          if (err.response) {
-            this.isError = true;
-            this.errorMsg = err.response.data.message;
-          }
-        });
-    },
-    validate() {
-      this.$refs.form.validate();
+
+      try {
+        await register(this.formData);
+        this.$router.push({ name: "login" }); // 회원가입 후 로그인 페이지로 이동
+      } catch (err) {
+        this.isError = true;
+        this.errorMsg = err.message || "회원가입에 실패했습니다.";
+      }
     },
     reset() {
       this.$refs.form.reset();
-    },
-    resetValidation() {
-      this.$refs.form.resetValidation();
-    },
-    goToLogin() {
-      this.$router.push({ name: "login" });
     },
   },
 };
