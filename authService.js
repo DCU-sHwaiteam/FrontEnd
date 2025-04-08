@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api/';
+// Flask 서버의 퍼블릭 IP로 변경 (EC2 퍼블릭 IP 사용)
+const API_URL = 'http://43.203.36.43/api/';  
 
+// 🔹 회원가입 요청
 export const register = async (userData) => {
   try {
-    const response = await axios.post(${API_URL}register/, {
+    const response = await axios.post(`${API_URL}register`, {
       email: userData.email,
       student_id: userData.studentId,
       department: userData.department,
@@ -13,41 +15,41 @@ export const register = async (userData) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    console.error("❌ 회원가입 실패:", error.response?.data);
+    throw error.response?.data;
   }
 };
 
+// 🔹 로그인 요청
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(${API_URL}login/, {
-      email: email, // 기존: { email: { username, password } }
-      password: password
-    });
+    const response = await axios.post(`${API_URL}login`, { email, password });
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    console.error("❌ 로그인 실패:", error.response?.data);
+    throw error.response?.data;
   }
 };
 
+// 🔹 동아리 생성 요청
 export async function createClub(clubData) {
   try {
-    const response = await axios.post(${API_URL}create-club/, clubData);
+    const response = await axios.post(`${API_URL}create-club`, clubData);
     return response.data;
   } catch (error) {
-    console.error("Error creating club", error);
+    console.error("❌ 동아리 생성 실패:", error.response?.data);
     return { success: false };
   }
 }
 
+// 🔹 동아리 목록 조회 요청
 export async function fetchClubs() {
   try {
-    const response = await axios.get(${API_URL}clubs/);
+    const response = await axios.get(`${API_URL}clubs`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching clubs", error);
+    console.error("❌ 동아리 목록 조회 실패:", error.response?.data);
     return [];
   }
 }
-
-
 
