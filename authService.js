@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Flask 서버의 퍼블릭 IP로 변경 (EC2 퍼블릭 IP 사용)
-const API_URL = 'http://43.203.36.43:5000/api/';  
+const API_URL = 'http://43.203.36.43/api/';  
 
 // 🔹 회원가입 요청
 export const register = async (userData) => {
