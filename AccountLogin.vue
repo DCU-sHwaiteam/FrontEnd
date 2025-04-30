@@ -75,13 +75,29 @@ export default {
   },
   methods: {
     async login() {
+      // 👉 MOCK 활성화 여부 확인
+      const useMock = process.env.VUE_APP_USE_MOCK === 'true';
+
+      if (useMock) {
+        // ✅ 목업 로그인: 테스트 계정 "test@example.com" / "password123"
+        if (
+          this.inputUsername === 'test@example.com' &&
+          this.inputPassword === 'password123'
+        ) {
+          localStorage.setItem("token", "mock-token-1234");
+          this.$router.push({ name: "mainPage" });
+          return;
+        } else {
+          this.isError = true;
+          this.errorMsg = "아이디 또는 비밀번호가 잘못되었습니다. (Mock)";
+          return;
+        }
+      }
+
+      // ✅ 실제 백엔드 로그인
       try {
         const response = await login(this.inputUsername, this.inputPassword);
-
-        // 로그인 성공 시 토큰 저장
         localStorage.setItem("token", response.token);
-
-        // 메인 페이지로 이동
         this.$router.push({ name: "mainPage" });
       } catch (error) {
         this.isError = true;
