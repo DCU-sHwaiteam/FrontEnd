@@ -36,17 +36,22 @@
       <v-card>
         <v-card-title>가입된 동아리 목록</v-card-title>
         <v-divider></v-divider>
-        <v-list>
-          <v-list-item
-            v-for="club in approvedClubs"
-            :key="club.id"
-            @click="navigateToClubDetail(club.id)"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{ club.name }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
+        <v-card-text>
+          <div v-if="loading" class="loading-spinner">
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          </div>
+          <v-list v-else>
+            <v-list-item
+              v-for="club in approvedClubs"
+              :key="club.id"
+              @click="navigateToClubDetail(club.id)"
+            >
+              <v-list-item-content>
+                <v-list-item-title>{{ club.name }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
         <v-card-actions>
           <v-btn color="grey" text @click="showMyClubPopup = false">닫기</v-btn>
         </v-card-actions>
@@ -56,26 +61,48 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
       showMyClubPopup: false,
-      approvedClubs: [] // 기존 하드코딩 데이터를 제거
+      approvedClubs: [],
+      loading: false
     };
   },
   methods: {
     openMyClubPopup() {
-      this.loadApprovedClubs(); // 신청한 동아리 목록 불러오기
+      this.loadApprovedClubs();
       this.showMyClubPopup = true;
     },
-    loadApprovedClubs() {
-      const savedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
-      const myClubs = JSON.parse(localStorage.getItem("myClubs")) || [];
+    async loadApprovedClubs() {
+      this.loading = true;
 
-      // 저장된 myClubs에 있는 동아리만 approvedClubs에 저장
-      this.approvedClubs = myClubs.filter(myClub =>
-        savedClubs.some(club => club.id === myClub.id)
-      );
+      // 개발 환경에서만 목업 데이터 사용
+      if (process.env.NODE_ENV === 'development') {
+        this.approvedClubs = [
+          { id: 1, name: '인공지능 동아리' },
+          { id: 2, name: '프로그래밍 학회' }
+        ];
+        this.loading = false;
+        return;
+      }
+
+      // 운영 환경에서는 API 호출
+      try {
+        const response = await axios.get('/api/my-clubs', { withCredentials: true });
+        if (response.data.success) {
+          this.approvedClubs = response.data.clubs;
+        } else {
+          console.error('동아리 목록을 불러오는 데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('동아리 목록을 불러오는 중 오류 발생:', error);
+        alert('동아리 목록을 불러오지 못했습니다. 다시 시도해주세요.');
+      } finally {
+        this.loading = false;
+      }
     },
     navigateTo(routeName) {
       this.$router.push({ name: routeName });
@@ -86,23 +113,19 @@ export default {
     },
     logout() {
       console.log("로그아웃되었습니다.");
-      // 로그인 페이지로 이동
       this.$router.push({ name: 'login' });
     }
-  },
-  mounted() {
-    this.loadApprovedClubs(); // 페이지 로드 시 신청된 동아리 목록 불러오기
   }
 };
 </script>
 
 <style scoped>
 .main-page {
-  background-color: #f5f5f5; /* 배경 색상 */
+  background-color: #f5f5f5;
 }
 
 .title {
-  font-size: 2rem; /* DCU 동아리 텍스트 크기 */
+  font-size: 2rem;
   text-align: left;
 }
 
@@ -119,7 +142,7 @@ export default {
 }
 
 .button-row {
-  gap: 16px; /* 카드 간격 */
+  gap: 16px;
 }
 
 .list-card {
@@ -127,12 +150,12 @@ export default {
   margin-bottom: 16px;
   cursor: pointer;
   border-radius: 8px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
 
 .list-card:hover {
-  transform: translateY(-4px); /* 마우스 오버 시 살짝 상승 효과 */
+  transform: translateY(-4px);
 }
 
 .v-card-title {
@@ -143,6 +166,13 @@ export default {
 .v-card-subtitle {
   color: #666;
   font-size: 0.9rem;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
 }
 </style>
 
