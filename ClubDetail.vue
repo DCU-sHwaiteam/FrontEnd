@@ -3,7 +3,7 @@
     <!-- 동아리 기본 정보 -->
     <v-card class="club-info-card">
       <v-card-title>{{ club.name }}</v-card-title>
-      <v-card-subtitle>동아리장: {{ club.leader }}</v-card-subtitle>
+      <v-card-subtitle>동아리장: {{ club.leader_name }}</v-card-subtitle>
       <v-card-text>{{ club.description }}</v-card-text>
     </v-card>
 
@@ -12,8 +12,8 @@
       <v-tab value="announcements">공지사항</v-tab>
       <v-tab value="schedule">일정</v-tab>
       <v-tab value="gallery">갤러리</v-tab>
-      <v-tab value="members" v-if="isAdmin">멤버 관리</v-tab>
-      <v-tab value="attendance" v-if="isAdmin">출석체크</v-tab>
+      <v-tab value="members">멤버 관리</v-tab>
+      <v-tab value="attendance">출석체크</v-tab>
     </v-tabs>
 
     <!-- 탭 내용 -->
@@ -27,11 +27,11 @@
       <v-window-item value="gallery">
         <GalleryTab />
       </v-window-item>
-      <v-window-item value="members" v-if="isAdmin">
-        <MembersTab />
+      <v-window-item value="members">
+        <MembersTab :members="members" />
       </v-window-item>
-      <v-window-item value="attendance" v-if="isAdmin">
-        <AttendanceMember />
+      <v-window-item value="attendance">
+        <AttendanceMember :members="members" />
       </v-window-item>
     </v-window>
   </v-container>
@@ -43,6 +43,11 @@ import ScheduleTab from '@/components/club/ScheduleTab.vue';
 import GalleryTab from '@/components/club/GalleryTab.vue';
 import MembersTab from '@/components/club/MembersTab.vue';
 import AttendanceMember from '@/components/club/AttendanceMember.vue';
+
+import axios from 'axios';
+
+const API_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000';
+
 export default {
   components: {
     AnnouncementsTab,
@@ -56,34 +61,41 @@ export default {
       activeTab: 'announcements',
       club: {
         name: "",
-        leader: "",
+        leader_name: "",
         description: ""
       },
-      isAdmin: true // 이후에 사용자 역할과 연동 필요
+      members: [],
+      isAdmin: false,
+      currentUserEmail: ""
     };
   },
   methods: {
-    loadClubData() {
-      const clubId = this.$route.params.id || localStorage.getItem("selectedClubId");  // URL 또는 로컬스토리지에서 ID 가져오기
-      const savedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
+    async loadClubData() {
+      const clubId = this.$route.params.id;
 
-      // 선택한 동아리 찾기
-      const selectedClub = savedClubs.find(club => club.id === clubId);
+      try {
+        // 로그인 사용자 정보 불러오기 (예: 세션 기반)
+        const userRes = await axios.get(`${API_URL}api/current-user`, { withCredentials: true });
+        this.currentUserEmail = userRes.data.email;
 
-      if (selectedClub) {
-        this.club = selectedClub;
-      } else {
-        console.error("해당 동아리를 찾을 수 없습니다.");
+        // 동아리 정보 요청
+        const clubRes = await axios.get(`${API_URL}api/clubs/${clubId}`, { withCredentials: true });
+        this.club = clubRes.data;
+
+        // 동아리 멤버 목록 요청
+        const membersRes = await axios.get(`${API_URL}api/clubs/${clubId}/members`, { withCredentials: true });
+        this.members = membersRes.data;
+
+        // 현재 로그인한 유저가 동아리장인지 확인
+        this.isAdmin = this.club.leader_email === this.currentUserEmail;
+      } catch (err) {
+        console.error("❌ 동아리 상세 정보 로드 실패:", err.response?.data || err);
       }
-
-      // 저장된 회원 & 신청자 정보 불러오기 (로컬 저장소 활용)
-      this.members = JSON.parse(localStorage.getItem(`club_${clubId}_members`)) || [];
-      this.applicants = JSON.parse(localStorage.getItem(`club_${clubId}_applicants`)) || [];
     }
   },
   mounted() {
-  this.loadClubData();  // 페이지 로드 시 동아리 정보 불러오기
-}
+    this.loadClubData();
+  }
 };
 </script>
 
