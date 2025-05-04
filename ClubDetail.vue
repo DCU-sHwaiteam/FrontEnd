@@ -28,7 +28,7 @@
         <GalleryTab />
       </v-window-item>
       <v-window-item value="members">
-        <MembersTab :members="members" />
+        <MembersTab v-if="club.id" :members="members" :club-id="club.id" />
       </v-window-item>
       <v-window-item value="attendance">
         <AttendanceMember :members="members" />
@@ -75,15 +75,15 @@ export default {
 
       try {
         // 로그인 사용자 정보 불러오기 (예: 세션 기반)
-        const userRes = await axios.get(`${API_URL}api/current-user`, { withCredentials: true });
+        const userRes = await axios.get(`${API_URL}current-user`, { withCredentials: true });
         this.currentUserEmail = userRes.data.email;
 
         // 동아리 정보 요청
-        const clubRes = await axios.get(`${API_URL}api/clubs/${clubId}`, { withCredentials: true });
+        const clubRes = await axios.get(`${API_URL}clubs/${clubId}`, { withCredentials: true });
         this.club = clubRes.data;
 
         // 동아리 멤버 목록 요청
-        const membersRes = await axios.get(`${API_URL}api/clubs/${clubId}/members`, { withCredentials: true });
+        const membersRes = await axios.get(`${API_URL}clubs/${clubId}/members`, { withCredentials: true });
         this.members = membersRes.data;
 
         // 현재 로그인한 유저가 동아리장인지 확인
