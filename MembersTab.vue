@@ -12,29 +12,31 @@
         <v-card-title>신청 목록</v-card-title>
         <v-card-text>
           <v-list>
-            <v-list-item v-for="(applicant, index) in applications" :key="index">
+            <v-list-item v-for="applicant in applications" :key="applicant.id">
               <div class="member-item">
                 <!-- 프로필 -->
                 <div class="profile-container">
                   <v-avatar size="50">
-                    <img :src="applicant.profileImage || defaultProfileImage" alt="프로필 사진" />
+                    <img :src="applicant.profile_image || defaultProfileImage" alt="프로필 사진" />
                   </v-avatar>
                 </div>
 
-                <!-- 수직 구분선 -->
                 <div class="divider"></div>
 
                 <!-- 정보 영역 -->
                 <div class="info-container">
                   <div class="name">{{ applicant.name }}</div>
-                  <div class="details">{{ applicant.major }} | {{ applicant.studentId }}</div>
+                  <div class="details">{{ applicant.department }} | {{ applicant.student_id }}</div>
                 </div>
 
                 <!-- 승인 버튼 -->
                 <div class="button-container">
-                  <v-btn color="green" @click="approveMember(index)">승인</v-btn>
+                  <v-btn color="green" @click="approveMember(applicant.id)">승인</v-btn>
                 </div>
               </div>
+            </v-list-item>
+            <v-list-item v-if="applications.length === 0">
+              <span>신청자가 없습니다.</span>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -46,117 +48,158 @@
 
     <!-- 현재 멤버 목록 -->
     <v-list>
-      <v-list-item v-for="(member, index) in members" :key="index">
+      <v-list-item v-for="member in members" :key="member.id">
         <div class="member-item">
-          <!-- 프로필 -->
           <div class="profile-container">
             <v-avatar size="50">
-              <img :src="member.profileImage || defaultProfileImage" alt="프로필 사진" />
+              <img :src="member.profile_image || defaultProfileImage" alt="프로필 사진" />
             </v-avatar>
           </div>
-
-          <!-- 수직 구분선 -->
           <div class="divider"></div>
-
-          <!-- 정보 영역 -->
           <div class="info-container">
             <div class="name">{{ member.name }}</div>
-            <div class="details">{{ member.major }} | {{ member.studentId }}</div>
+            <div class="details">{{ member.department }} | {{ member.student_id }}</div>
           </div>
-
-          <!-- 삭제 버튼 -->
           <div class="button-container">
-            <v-btn color="red" @click="removeMember(index)">삭제</v-btn>
+            <v-btn color="red" @click="removeMember(member.id)">삭제</v-btn>
           </div>
         </div>
+      </v-list-item>
+      <v-list-item v-if="members.length === 0">
+        <span>등록된 멤버가 없습니다.</span>
       </v-list-item>
     </v-list>
   </v-container>
 </template>
 
+
+
 <script>
+
+import axios from 'axios';
+
+const API_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000';
+
+import { 
+  fetchClubApplications, 
+  approveMembership, 
+  deleteMember 
+} from '@/services/authService'; // authService.js에서 함수 불러오기
+
 export default {
   name: 'MembersTab',
+  props: {
+    clubId: {
+      type: [String, Number],
+      required: true
+    }
+  },
   data() {
     return {
       applicationsDialog: false,
-      applications: JSON.parse(localStorage.getItem("clubApplications")) || [],
-      members: JSON.parse(localStorage.getItem("clubMembers")) || [],
+      applications: [],
+      members: [],
       defaultProfileImage: "https://via.placeholder.com/50"
     };
   },
   methods: {
+    // 멤버 목록 불러오기 (axios 직접 사용, 필요하다면 authService에 함수 추가 가능)
+    async fetchMembers() {
+      try {
+        const response = await axios.get(`${API_URL}clubs/${this.clubId}/members`, { 
+        withCredentials: true 
+        });
+        this.members = await response.data;
+      } catch (err) {
+        console.error("멤버 목록 불러오기 실패", err);
+        this.members = [];
+      }
+    },
+    // 신청 목록 불러오기 (authService 함수 사용)
+    async fetchApplications() {
+      try {
+        this.applications = await fetchClubApplications(this.clubId);
+      } catch (err) {
+        console.error("신청 목록 불러오기 실패", err);
+        this.applications = [];
+      }
+    },
     openApplicationsDialog() {
+      this.fetchApplications();
       this.applicationsDialog = true;
     },
-    approveMember(index) {
-      const approvedMember = this.applications.splice(index, 1)[0];
-
-      if (!this.members.some(member => member.studentId === approvedMember.studentId)) {
-        // ✅ Vue가 반응형으로 감지할 수 있도록 새로운 배열을 할당!
-        this.members = [...this.members, approvedMember];
-        localStorage.setItem("clubMembers", JSON.stringify(this.members));
+    // 승인 (authService 함수 사용)
+    async approveMember(applicantId) {
+      try {
+        await approveMembership(applicantId, this.clubId);
+        await this.fetchApplications();
+        await this.fetchMembers();
+        this.$emit('members-updated', this.members);
+      } catch (err) {
+        console.error("멤버 승인 실패", err);
+        alert("승인에 실패했습니다.");
       }
-
-      localStorage.setItem("clubApplications", JSON.stringify(this.applications));
     },
-    removeMember(index) {
-      // ✅ 특정 멤버 삭제
-      this.members.splice(index, 1);
-      this.members = [...this.members]; // Vue가 반응하도록 새 배열 할당
-      localStorage.setItem("clubMembers", JSON.stringify(this.members));
+    // 삭제 (authService 함수 사용)
+    async removeMember(memberId) {
+      try {
+        await deleteMember(this.clubId, memberId);
+        await this.fetchMembers();
+        this.$emit('members-updated', this.members);
+      } catch (err) {
+        console.error("멤버 삭제 실패", err);
+        alert("삭제에 실패했습니다.");
+      }
+    }
+  },
+  mounted() {
+    this.fetchMembers();
+  },
+  watch: {
+    clubId(newId, oldId) {
+      if (newId !== oldId) {
+        this.fetchMembers();
+      }
     }
   }
 };
 </script>
 
 <style scoped>
-/* ✅ 멤버 리스트 스타일 */
 .member-item {
   display: flex;
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ddd;
-  justify-content: flex-start; /* 왼쪽 정렬 */
-  gap: 15px; /* 요소들 사이 간격 추가 */
+  justify-content: flex-start;
+  gap: 15px;
 }
-
-/* ✅ 프로필 컨테이너 */
 .profile-container {
-  flex: 0 0 60px; /* 고정 크기 */
+  flex: 0 0 60px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-/* ✅ 수직 구분선 */
 .divider {
   width: 2px;
   height: 40px;
   background-color: #ccc;
 }
-
-/* ✅ 정보 컨테이너 */
 .info-container {
-  flex: 1; /* 남은 공간을 차지 */
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: left;
 }
-
-/* ✅ 버튼 컨테이너 */
 .button-container {
   flex: 0 0 auto;
-  margin-left: auto; /* 오른쪽 끝으로 이동 */
+  margin-left: auto;
 }
-
-/* ✅ 텍스트 스타일 */
 .name {
   font-weight: bold;
   font-size: 16px;
 }
-
 .details {
   font-size: 14px;
   color: #666;
