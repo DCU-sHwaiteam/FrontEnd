@@ -12,7 +12,7 @@ export const register = async (userData) => {
       student_id: userData.studentId,
       department: userData.department,
       phone: userData.phone,
-      password: userData.password,
+      password: userData.password,sour
     }, { withCredentials: true });
     return response.data;
   } catch (error) {
@@ -57,7 +57,7 @@ export async function fetchClubs() {
 // 🔹 동아리 가입 요청 추가
 export async function joinClub(userId, clubId) {
   try {
-    const response = await axios.post(`${API_URL}api/join-club`, {
+    const response = await axios.post(`${API_URL}join-club`, {
       user_id: userId,
       club_id: clubId,
     }, { withCredentials: true });
@@ -68,13 +68,13 @@ export async function joinClub(userId, clubId) {
   }
 }
 
-// 🔹 동아리 가입 승인 요청 추가
-export async function approveMembership(userId, clubId, leaderEmail) {
+// 🔹 동아리 가입 승인 (leader_email 파라미터 제거)
+export async function approveMembership(userId, clubId) { // 변경된 부분
   try {
-    const response = await axios.post(`${API_URL}api/approve-membership`, {
+    const response = await axios.post(`${API_URL}approve-membership`, {
       user_id: userId,
-      club_id: clubId,
-      leader_email: leaderEmail,
+      club_id: clubId
+      // leader_email은 백엔드에서 세션으로 처리
     }, { withCredentials: true });
     return response.data;
   } catch (error) {
@@ -83,6 +83,7 @@ export async function approveMembership(userId, clubId, leaderEmail) {
   }
 }
 
+
 // 🔹 로그인한 사용자 정보 조회 요청
 export async function fetchCurrentUser() {
   try {
@@ -90,6 +91,32 @@ export async function fetchCurrentUser() {
     return response.data.user;  // 성공 시 user 객체 반환
   } catch (error) {
     console.error("❌ 현재 사용자 정보 조회 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 🔹 동아리 가입 신청자 목록 조회
+export async function fetchClubApplications(clubId) {
+  try {
+    const response = await axios.get(`${API_URL}clubs/${clubId}/applications`, { 
+      withCredentials: true 
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ 신청자 목록 조회 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 🔹 동아리 멤버 삭제
+export async function deleteMember(clubId, userId) {
+  try {
+    const response = await axios.delete(`${API_URL}clubs/${clubId}/members/${userId}`, { 
+      withCredentials: true 
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ 멤버 삭제 실패:", error.response?.data);
     throw error.response?.data;
   }
 }
