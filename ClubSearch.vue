@@ -79,7 +79,7 @@
 import axios from "axios";
 import { fetchClubs, joinClub } from "@/services/authService";
 
-const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000/';
+const API_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000/';
 
 const mockClubs = [
   {
@@ -142,8 +142,8 @@ export default {
     },
     async submitApplication() {
       try {
-        const userRes = await axios.get(`${API_URL}api/current-user`, { withCredentials: true });
-        const userId = userRes.data.id;
+        const userRes = await axios.get(`${API_URL}current-user`, { withCredentials: true });
+        const userId = userRes.data.user.id;
 
         await joinClub(userId, this.selectedClub.id);
 
@@ -188,20 +188,3 @@ export default {
   transform: translateY(-4px);
 }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
