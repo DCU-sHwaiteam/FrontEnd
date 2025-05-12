@@ -5,7 +5,7 @@
       <v-btn 
         color="primary" 
         @click="openCreateAttendanceDialog" 
-        v-if=isAdmin
+        v-if="isAdmin"
       >
         출석 생성
       </v-btn>
@@ -35,15 +35,15 @@
       <v-card>
         <v-card-title>
           <span>{{ currentWeek }}주차 출석 체크</span>
+        </v-card-title>
+
+        <v-card-text>
           <v-chip 
-            v-if="isAdmin && attendanceList[currentWeek - 1]?.type === 'PIN'" 
+            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'" 
             class="otp-pin"
           >
             {{ attendanceList[currentWeek - 1].pin }}
           </v-chip>
-        </v-card-title>
-
-        <v-card-text>
           <p v-if="attendanceList[currentWeek - 1]?.type">
             출석 방식: {{ attendanceList[currentWeek - 1].type }}
           </p>
@@ -59,16 +59,28 @@
           </p>
         </v-card-text>
 
-        <v-card-actions>
-          <v-btn text color="red" @click="showAttendanceDialog = false">닫기</v-btn>
+        <v-card-actions class="d-flex justify-space-between align-center">
+          <!-- 삭제 버튼을 왼쪽 끝에 배치 -->
           <v-btn
-            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
-            color="primary"
-            @click="checkAttendance"
-            :disabled="isAttendanceClosed(currentWeek - 1)"
+            v-if="isAdmin"
+            color="error"
+            @click="confirmDeleteAttendance"
           >
-            출석
+            출석 삭제
           </v-btn>
+
+          <!-- 닫기 및 출석 버튼은 오른쪽 끝에 배치 -->
+          <div>
+            <v-btn text color="red" @click="showAttendanceDialog = false">닫기</v-btn>
+            <v-btn
+              v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
+              color="primary"
+              @click="checkAttendance"
+              :disabled="isAttendanceClosed(currentWeek - 1)"
+            >
+              출석
+            </v-btn>
+          </div>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -108,7 +120,8 @@
 import { 
   fetchAttendanceList, 
   createAttendanceRecord, 
-  markAttendance 
+  markAttendance,
+  deleteAttendanceRecord
 } from '@/services/authService';
 
 export default {
@@ -204,7 +217,18 @@ export default {
           this.showAttendanceDialog = false;
         } catch (error) {
           alert(error.response?.data?.message || "출석 체크 실패");
-          
+        }
+      }
+    },
+    async confirmDeleteAttendance() {
+      if (confirm("정말로 이 주차의 출석을 삭제하시겠습니까?")) {
+        try {
+          await deleteAttendanceRecord(this.clubId, this.currentWeek);
+          this.showAttendanceDialog = false;
+          this.loadAttendanceList();
+          alert("출석이 삭제되었습니다.");
+        } catch (error) {
+          alert(error.response?.data?.message || "출석 삭제 실패");
         }
       }
     },
@@ -224,7 +248,7 @@ export default {
       const attendanceDeadline = new Date(kstNow);
       attendanceDeadline.setHours(hours, minutes, 0);
 
-      return now > attendanceDeadline;
+      return kstNow > attendanceDeadline;
     },
   }
 };
