@@ -12,7 +12,7 @@ export const register = async (userData) => {
       student_id: userData.studentId,
       department: userData.department,
       phone: userData.phone,
-      password: userData.password,sour
+      password: userData.password,
     }, { withCredentials: true });
     return response.data;
   } catch (error) {
@@ -117,6 +117,63 @@ export async function deleteMember(clubId, userId) {
     return response.data;
   } catch (error) {
     console.error("❌ 멤버 삭제 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 출석 리스트 조회
+export async function fetchAttendanceList(clubId) {
+  try {
+    const response = await axios.get(`${API_URL}clubs/${clubId}/attendance`, { 
+      withCredentials: true 
+    });
+    return response.data;
+  } catch (error) {
+    console.error("출석 리스트 조회 실패:", error.response?.data);
+    return [];
+  }
+}
+
+// 출석 생성
+export async function createAttendanceRecord(clubId, data) {
+  try {
+    const response = await axios.post(
+      `${API_URL}clubs/${clubId}/attendance`,
+      data,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("출석 생성 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 출석 체크
+export async function markAttendance(clubId, week, pin) {
+  try {
+    const response = await axios.post(
+      `${API_URL}clubs/${clubId}/attendance/mark`,
+      { week, pin },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("출석 체크 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 출석 삭제
+export async function deleteAttendanceRecord(clubId, week) {
+  try {
+    const response = await axios.delete(
+      `${API_URL}clubs/${clubId}/attendance/${week}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("출석 삭제 실패:", error.response?.data);
     throw error.response?.data;
   }
 }
