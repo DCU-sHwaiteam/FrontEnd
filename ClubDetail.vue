@@ -19,19 +19,19 @@
     <!-- 탭 내용 -->
     <v-window v-model="activeTab">
       <v-window-item value="announcements">
-        <AnnouncementsTab :is-admin="isAdmin" />
+        <AnnouncementsTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
       </v-window-item>
       <v-window-item value="schedule">
-        <ScheduleTab :is-admin="isAdmin" />
+        <ScheduleTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
       </v-window-item>
       <v-window-item value="gallery">
-        <GalleryTab />
+        <GalleryTab v-if="club.id" :club-id="club.id" />
       </v-window-item>
       <v-window-item value="members">
         <MembersTab v-if="club.id" :members="members" :club-id="club.id" />
       </v-window-item>
       <v-window-item value="attendance">
-        <AttendanceMember :members="members" />
+        <AttendanceMember v-if="club.id" :club-id="club.id" :is-admin="isAdmin" />
       </v-window-item>
     </v-window>
   </v-container>
@@ -87,7 +87,10 @@ export default {
         this.members = membersRes.data;
 
         // 현재 로그인한 유저가 동아리장인지 확인
-        this.isAdmin = this.club.leader_email === this.currentUserEmail;
+        this.isAdmin = this.club.leader_id === userRes.data.user.id;
+
+        // 콘솔로 값 확인해보세요!
+        console.log("club.leader_id:", this.club.leader_id, "user.id:", userRes.data.user.id, "isAdmin:", this.isAdmin);
       } catch (err) {
         console.error("❌ 동아리 상세 정보 로드 실패:", err.response?.data || err);
       }
