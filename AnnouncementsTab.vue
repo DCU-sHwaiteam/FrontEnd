@@ -3,25 +3,22 @@
     <h2>공지사항</h2>
     <p>동아리 공지를 관리하는 공간입니다.</p>
 
-    <!-- 공지 추가 (관리자 전용) -->
     <v-btn v-if="isAdmin" color="primary" class="mb-3" @click="openDialog">
       공지 추가
     </v-btn>
 
-    <!-- 공지 목록 -->
     <v-row>
-      <v-col v-for="(announcement, index) in announcements" :key="index" cols="12" sm="6" md="4">
+      <v-col v-for="announcement in announcements" :key="announcement.id" cols="12" sm="6" md="4">
         <v-card class="announcement-card">
           <v-card-title>{{ announcement.title }}</v-card-title>
           <v-card-text>{{ announcement.content }}</v-card-text>
           <v-card-actions v-if="isAdmin">
-            <v-btn color="red" text @click="deleteAnnouncement(index)">삭제</v-btn>
+            <v-btn color="red" text @click="deleteAnnouncement(announcement.id)">삭제</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- 공지 작성 다이얼로그 -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
         <v-card-title>공지 추가</v-card-title>
@@ -39,46 +36,47 @@
 </template>
 
 <script>
+import { fetchAnnouncements, addAnnouncement, deleteAnnouncement } from '@/services/authService';
+
 export default {
   props: {
-    isAdmin: Boolean, // ClubDetail.vue에서 전달됨
+    isAdmin: Boolean,
+    clubId: [String, Number], // ClubDetail에서 club-id로 전달
   },
   data() {
     return {
       dialog: false,
       newAnnouncement: { title: "", content: "" },
-      announcements: JSON.parse(localStorage.getItem("announcements")) || [], // 공지사항 로드
+      announcements: [],
     };
   },
+  mounted() {
+    this.loadAnnouncements();
+  },
   methods: {
+    async loadAnnouncements() {
+      if (!this.clubId) {
+        console.error("clubId가 없습니다!");
+        return;
+      }
+      this.announcements = await fetchAnnouncements(this.clubId);
+    },
     openDialog() {
       this.dialog = true;
     },
-    addAnnouncement() {
+    async addAnnouncement() {
       if (this.newAnnouncement.title && this.newAnnouncement.content) {
-        this.announcements.push({ ...this.newAnnouncement });
-        localStorage.setItem("announcements", JSON.stringify(this.announcements)); // 로컬 저장
+        await addAnnouncement(this.clubId, this.newAnnouncement);
         this.newAnnouncement = { title: "", content: "" };
         this.dialog = false;
+        this.loadAnnouncements();
       }
     },
-    deleteAnnouncement(index) {
-      this.announcements.splice(index, 1);
-      localStorage.setItem("announcements", JSON.stringify(this.announcements));
+    async deleteAnnouncement(announcementId) {
+      await deleteAnnouncement(this.clubId, announcementId);
+      this.loadAnnouncements();
     },
   },
 };
 </script>
-
-<style scoped>
-.announcement-card {
-  background-color: #fff7d1; /* 메모장 느낌의 배경 */
-  border: 1px solid #f4c542;
-  padding: 16px;
-  min-height: 150px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-</style>
   
