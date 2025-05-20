@@ -3,25 +3,24 @@
     <h2>갤러리</h2>
     <p>동아리 활동 사진을 업로드하고 관리할 수 있습니다.</p>
 
-    <!-- 업로드 버튼 -->
     <v-btn color="primary" @click="openUploadDialog">📷 업로드</v-btn>
 
-    <!-- 사진 목록 (그리드 레이아웃) -->
     <v-row>
-      <v-col v-for="(image, index) in images" :key="index" cols="12" sm="6" md="4" lg="3">
+      <!-- index 사용: openImageViewer(index) -->
+      <v-col v-for="(image, index) in images" :key="image.id" cols="12" sm="6" md="4" lg="3">
         <v-card class="photo-card" @click="openImageViewer(index)">
           <v-img :src="image.src" height="200px" contain></v-img>
-          <v-divider></v-divider> <!-- 🔹 구분선 추가 -->
+          <v-divider></v-divider>
           <v-card-title class="image-title">{{ image.title }}</v-card-title>
           <v-card-text class="image-description">{{ image.description }}</v-card-text>
           <v-card-actions>
-            <v-btn color="red" @click.stop="deleteImage(index)">🗑 삭제</v-btn>
+            <v-btn color="red" @click.stop="deleteImage(image.id)">🗑 삭제</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- 업로드 팝업 다이얼로그 -->
+    <!-- 업로드 팝업 -->
     <v-dialog v-model="uploadDialog" max-width="500px">
       <v-card>
         <v-card-title>📸 사진 업로드</v-card-title>
@@ -43,8 +42,9 @@
       <v-card>
         <v-card-title class="popup-title">📷 사진 보기</v-card-title>
         <v-card-text>
+          <!-- index가 필요 없는 곳에서는 image만 사용 -->
           <v-carousel v-model="currentImageIndex" hide-delimiters show-arrows>
-            <v-carousel-item v-for="(image, index) in images" :key="index">
+            <v-carousel-item v-for="image in images" :key="image.id">
               <v-img :src="image.src" height="400px" contain></v-img>
               <v-card-title class="popup-image-title">{{ image.title }}</v-card-title>
               <v-card-text class="popup-image-description">{{ image.description }}</v-card-text>
@@ -60,47 +60,58 @@
 </template>
 
 <script>
+import { fetchGalleryImages, uploadGalleryImage, deleteGalleryImage } from '@/services/authService';
+
 export default {
   name: "GalleryTab",
+  props: {
+    clubId: [String, Number]
+  },
   data() {
     return {
       uploadDialog: false,
       imageViewerDialog: false,
       currentImageIndex: 0,
-      images: JSON.parse(localStorage.getItem("galleryImages")) || [],
-      newImage: { title: "", description: "", src: "" },
+      images: [],
+      newImage: { title: "", description: "", file: null },
       previewImage: null
     };
   },
+  mounted() {
+    this.loadImages();
+  },
   methods: {
+    async loadImages() {
+      this.images = await fetchGalleryImages(this.clubId);
+    },
     openUploadDialog() {
-      this.newImage = { title: "", description: "", src: "" };
+      this.newImage = { title: "", description: "", file: null };
       this.previewImage = null;
       this.uploadDialog = true;
     },
     handleFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
+        this.newImage.file = file;
         const reader = new FileReader();
         reader.onload = (e) => {
           this.previewImage = e.target.result;
-          this.newImage.src = e.target.result;
         };
         reader.readAsDataURL(file);
       }
     },
-    addImage() {
-      if (!this.newImage.title || !this.newImage.src) {
+    async addImage() {
+      if (!this.newImage.title || !this.newImage.file) {
         alert("제목과 이미지를 입력하세요.");
         return;
       }
-      this.images.push({ ...this.newImage });
-      localStorage.setItem("galleryImages", JSON.stringify(this.images));
+      await uploadGalleryImage(this.clubId, this.newImage);
       this.uploadDialog = false;
+      this.loadImages();
     },
-    deleteImage(index) {
-      this.images.splice(index, 1);
-      localStorage.setItem("galleryImages", JSON.stringify(this.images));
+    async deleteImage(imageId) {
+      await deleteGalleryImage(this.clubId, imageId);
+      this.loadImages();
     },
     openImageViewer(index) {
       this.currentImageIndex = index;
@@ -111,7 +122,7 @@ export default {
 </script>
 
 <style>
-/* ✅ 업로드된 사진 카드 스타일 */
+/* 기존 스타일 유지 */
 .photo-card {
   margin: 10px;
   border: 1px solid #ddd;
@@ -123,8 +134,6 @@ export default {
 .photo-card:hover {
   transform: scale(1.05);
 }
-
-/* ✅ 제목과 내용 스타일 */
 .image-title {
   font-weight: bold;
   font-size: 1.1rem;
@@ -134,8 +143,6 @@ export default {
   padding: 5px;
   color: #666;
 }
-
-/* ✅ 팝업 제목 및 설명 스타일 */
 .popup-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -152,14 +159,10 @@ export default {
   color: #555;
   padding: 10px;
 }
-
-/* ✅ 슬라이드 동그라미(페이지 표시기) 크기 축소 & 색상 변경 */
 .v-carousel .v-btn--variant-text {
-  font-size: 8px !important; /* 원 크기 줄이기 */
-  color: gray !important; /* 색상 회색으로 변경 */
+  font-size: 8px !important;
+  color: gray !important;
 }
-
-/* ✅ 팝업의 아래 검은색 배경 제거 */
 .v-carousel__controls {
   display: none !important;
 }
