@@ -60,7 +60,6 @@
         </v-card-text>
 
         <v-card-actions class="d-flex justify-space-between align-center">
-          <!-- 삭제 버튼을 왼쪽 끝에 배치 -->
           <v-btn
             v-if="isAdmin"
             color="error"
@@ -68,15 +67,12 @@
           >
             출석 삭제
           </v-btn>
-
-          <!-- 닫기 및 출석 버튼은 오른쪽 끝에 배치 -->
           <div>
             <v-btn text color="red" @click="showAttendanceDialog = false">닫기</v-btn>
             <v-btn
               v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
               color="primary"
               @click="checkAttendance"
-              :disabled="isAttendanceClosed(currentWeek - 1)"
             >
               출석
             </v-btn>
@@ -145,7 +141,13 @@ export default {
       attendanceTime: "",
       attendanceTypes: ["PIN", "QR", "와이파이"],
       weeks: Array.from({ length: 16 }, (_, i) => i + 1),
-      attendanceList: [],
+      attendanceList: Array.from({ length: 16 }, (_, i) => ({
+        week: i + 1,
+        status: '미생성',
+        type: null,
+        time: null,
+        pin: null
+      })),
       inputPin: "",
       refreshInterval: null
     };
@@ -171,14 +173,18 @@ export default {
   methods: {
     async loadAttendanceList() {
       try {
-        this.attendanceList = await fetchAttendanceList(this.clubId);
+        const serverData = await fetchAttendanceList(this.clubId);
+        this.attendanceList = this.attendanceList.map(local => {
+          const serverItem = serverData.find(item => item.week === local.week);
+          return serverItem ? { ...local, ...serverItem } : local;
+        });
       } catch (error) {
         console.error("출석 리스트 불러오기 실패", error);
-        this.attendanceList = [];
       }
     },
     openAttendanceDialog(index) {
       this.currentWeek = index + 1;
+      this.inputPin = "";
       this.showAttendanceDialog = true;
     },
     openCreateAttendanceDialog() {
@@ -186,34 +192,28 @@ export default {
     },
     async createAttendance() {
       try {
-        const response = await createAttendanceRecord(this.clubId, {
+        await createAttendanceRecord(this.clubId, {
           week: this.selectedWeek,
           type: this.attendanceType,
           time: this.attendanceTime
         });
-        this.attendanceList[this.selectedWeek - 1] = {
-          ...response.data,
-          status: "미정"
-        };
+        await this.loadAttendanceList();
         this.showCreateAttendanceDialog = false;
-        this.loadAttendanceList();
       } catch (error) {
-        alert("출석 생성 실패");
-        console.error(error);
+        alert("출석 생성 실패: " + (error.response?.data?.message || "서버 오류"));
       }
     },
     async checkAttendance() {
       const attendance = this.attendanceList[this.currentWeek - 1];
+      // 마감 시간 체크 (프론트에서도, 하지만 서버가 최종 판정)
       if (this.isAttendanceClosed(this.currentWeek - 1)) {
         alert("출석 시간이 종료되었습니다.");
         return;
       }
-
       if (attendance.type === "PIN") {
         try {
           await markAttendance(this.clubId, this.currentWeek, this.inputPin);
-          alert("출석 완료!");
-          this.attendanceList[this.currentWeek - 1].status = "출석";
+          await this.loadAttendanceList();
           this.showAttendanceDialog = false;
         } catch (error) {
           alert(error.response?.data?.message || "출석 체크 실패");
@@ -224,9 +224,8 @@ export default {
       if (confirm("정말로 이 주차의 출석을 삭제하시겠습니까?")) {
         try {
           await deleteAttendanceRecord(this.clubId, this.currentWeek);
+          await this.loadAttendanceList();
           this.showAttendanceDialog = false;
-          this.loadAttendanceList();
-          alert("출석이 삭제되었습니다.");
         } catch (error) {
           alert(error.response?.data?.message || "출석 삭제 실패");
         }
@@ -234,21 +233,22 @@ export default {
     },
     getAttendanceColor(status, time) {
       if (this.isAttendanceClosed(time)) return "gray";
-      return status === "출석" ? "green" : status === "결석" ? "red" : "gray";
+      return status === "출석" ? "green" 
+           : status === "결석" ? "red" 
+           : status === "미생성" ? "gray"
+           : "gray";
     },
+    // ✅ 시간대 변환 없이 브라우저 로컬 시간 사용
     isAttendanceClosed(index) {
       const time = this.attendanceList[index]?.time;
       if (!time) return false;
 
-      const now = new Date();
-      const kstOffset = 9 * 60 * 60000;
-      const kstNow = new Date(now.getTime() + kstOffset);
-      
+      const now = new Date(); // 브라우저 로컬 시간(KST 환경이면 KST)
       const [hours, minutes] = time.split(":").map(Number);
-      const attendanceDeadline = new Date(kstNow);
-      attendanceDeadline.setHours(hours, minutes, 0);
+      const attendanceDeadline = new Date(now);
+      attendanceDeadline.setHours(hours, minutes, 0, 0);
 
-      return kstNow > attendanceDeadline;
+      return now > attendanceDeadline;
     },
   }
 };
