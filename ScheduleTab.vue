@@ -30,63 +30,73 @@
 <script>
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import { fetchSchedules, addSchedule, deleteSchedule } from "@/services/authService";
 
 export default {
   components: { FullCalendar },
+  props: {
+    clubId: {
+      type: [String, Number],
+      required: true
+    }
+  },
   data() {
     return {
       newEventTitle: "",
       newEventDate: "",
-      events: JSON.parse(localStorage.getItem("events")) || [], // 🔹 localStorage에서 일정 불러오기
+      events: [],
       calendarOptions: {
         plugins: [dayGridPlugin],
         initialView: "dayGridMonth",
         height: "auto",
-        events: JSON.parse(localStorage.getItem("events")) || [] // 🔹 캘린더에도 반영
+        events: []
       }
     };
   },
+  async mounted() {
+    await this.loadEvents();
+  },
   methods: {
-    // 날짜 클릭 시
+    async loadEvents() {
+      try {
+        const data = await fetchSchedules(this.clubId);
+        this.events = data;
+        this.calendarOptions.events = data;
+      } catch (e) {
+        this.events = [];
+        this.calendarOptions.events = [];
+      }
+    },
     handleDateClick(info) {
       this.newEventDate = info.dateStr;
     },
-
-    // 일정 추가
-    addEvent() {
+    async addEvent() {
       if (!this.newEventDate || !this.newEventTitle) {
         alert("날짜와 제목을 입력하세요!");
         return;
       }
-
       const newEvent = {
-        id: Date.now(), // 고유 ID 생성
         title: this.newEventTitle,
         date: this.newEventDate,
         color: this.getRandomColor()
       };
-
-      this.events.push(newEvent);
-      this.calendarOptions.events.push(newEvent);
-      this.saveEvents();
-
-      this.newEventTitle = "";
-      this.newEventDate = "";
+      try {
+        await addSchedule(this.clubId, newEvent);
+        await this.loadEvents();
+        this.newEventTitle = "";
+        this.newEventDate = "";
+      } catch (e) {
+        alert(e?.message || "일정 추가 실패");
+      }
     },
-
-    // 일정 삭제
-    removeEvent(eventId) {
-      this.events = this.events.filter(event => event.id !== eventId);
-      this.calendarOptions.events = this.calendarOptions.events.filter(event => event.id !== eventId);
-      this.saveEvents();
+    async removeEvent(eventId) {
+      try {
+        await deleteSchedule(this.clubId, eventId);
+        await this.loadEvents();
+      } catch (e) {
+        alert(e?.message || "일정 삭제 실패");
+      }
     },
-
-    // localStorage에 저장
-    saveEvents() {
-      localStorage.setItem("events", JSON.stringify(this.events));
-    },
-
-    // 랜덤 색상 생성
     getRandomColor() {
       const colors = ["red", "blue", "green", "purple", "orange"];
       return colors[Math.floor(Math.random() * colors.length)];
