@@ -265,3 +265,42 @@ export async function deleteGalleryImage(clubId, imageId) {
   }
 }
 
+// 일정 목록 조회
+export async function fetchSchedules(clubId) {
+  try {
+    const response = await axios.get(`${API_URL}clubs/${clubId}/schedule`, { withCredentials: true });
+    return response.data;
+  } catch (error) {
+    console.error("일정 목록 조회 실패:", error.response?.data);
+    return [];
+  }
+}
+
+// 일정 추가
+export async function addSchedule(clubId, event) {
+  try {
+    const response = await axios.post(
+      `${API_URL}clubs/${clubId}/schedule`,
+      event,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("일정 추가 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 일정 삭제
+export async function deleteSchedule(clubId, scheduleId) {
+  try {
+    const response = await axios.delete(
+      `${API_URL}clubs/${clubId}/schedule/${scheduleId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("일정 삭제 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
