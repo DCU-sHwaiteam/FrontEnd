@@ -178,3 +178,90 @@ export async function deleteAttendanceRecord(clubId, week) {
   }
 }
 
+// 공지사항 목록 조회
+export async function fetchAnnouncements(clubId) {
+  try {
+    const response = await axios.get(`${API_URL}clubs/${clubId}/announcements`, { withCredentials: true });
+    return response.data;
+  } catch (error) {
+    console.error("공지사항 목록 조회 실패:", error.response?.data);
+    return [];
+  }
+}
+
+// 공지사항 추가
+export async function addAnnouncement(clubId, data) {
+  try {
+    const response = await axios.post(
+      `${API_URL}clubs/${clubId}/announcements`,
+      data,
+      { 
+        headers: { "Content-Type": "application/json" },  // ✅ 헤더 추가
+        withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("공지사항 추가 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 공지사항 삭제
+export async function deleteAnnouncement(clubId, announcementId) {
+  try {
+    const response = await axios.delete(
+      `${API_URL}clubs/${clubId}/announcements/${announcementId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("공지사항 삭제 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 갤러리 이미지 목록 조회
+export async function fetchGalleryImages(clubId) {
+  try {
+    const response = await axios.get(`${API_URL}clubs/${clubId}/gallery`, { withCredentials: true });
+    return response.data;
+  } catch (error) {
+    console.error("갤러리 이미지 목록 조회 실패:", error.response?.data);
+    return [];
+  }
+}
+
+// 갤러리 이미지 업로드
+export async function uploadGalleryImage(clubId, { title, description, file }) {
+  try {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("image", file);
+
+    const response = await axios.post(
+      `${API_URL}clubs/${clubId}/gallery`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("갤러리 이미지 업로드 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 갤러리 이미지 삭제
+export async function deleteGalleryImage(clubId, imageId) {
+  try {
+    const response = await axios.delete(
+      `${API_URL}clubs/${clubId}/gallery/${imageId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("갤러리 이미지 삭제 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
