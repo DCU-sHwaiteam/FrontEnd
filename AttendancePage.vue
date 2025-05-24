@@ -64,6 +64,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: "AttendancePage",
   data() {
@@ -78,18 +80,13 @@ export default {
         { text: '이름', value: 'name' },
         { text: '출석 여부', value: 'attendance' },
       ],
+      clubId: 1  // TODO: 실제 동아리 ID로 바꾸기
     };
   },
   computed: {
     members() {
       const data = this.weekAttendanceData[this.selectedWeek];
-      const isValid = Array.isArray(data);
-      if (!isValid) {
-        console.warn("❗ members()에 유효하지 않은 데이터:", data);
-      } else if (data.length > 0) {
-        console.log("✅ 첫 번째 member의 키:", Object.keys(data[0]));
-      }
-      return isValid ? data : [];
+      return Array.isArray(data) ? data : [];
     },
     presentMembers() {
       return this.members.filter(member => member.attendance);
@@ -108,62 +105,48 @@ export default {
     }
   },
   methods: {
-    viewWeekAttendance(week) {
+    async viewWeekAttendance(week) {
       this.selectedWeek = week;
-      const stored = localStorage.getItem("attendanceData");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        this.weekAttendanceData = parsed;
-        this.validateAttendanceData(parsed[week]);
-
-        console.log("✅ selectedWeek:", week);
-        console.log("✅ members:", this.weekAttendanceData[week]);
-      }
-
-      this.$nextTick(() => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/attendance/list`, {
+          params: {
+            club_id: this.clubId,
+            week: week
+          },
+          withCredentials: true  // 세션 기반 인증 시 필수
+        });
+        // 백엔드에서 받아온 출석자만 표시되므로, 출석 여부가 없는 인원은 결석 처리 필요
+        const members = await this.fetchClubMembers(this.clubId);
+        const attendanceRecords = response.data.attendance;
+        const enrichedMembers = members.map(member => {
+          const attended = attendanceRecords.find(r => r.user_id === member.id);
+          return {
+            id: member.id,
+            name: member.name,
+            department: member.department,
+            studentId: member.student_id,
+            grade: member.grade,
+            attendance: !!attended
+          };
+        });
+        this.weekAttendanceData[week] = enrichedMembers;
         this.dialog = true;
-      });
-    },
-    injectMockData() {
-      const names = [
-        "홍길동", "김철수", "이영희", "박민수", "최수정",
-        "정예린", "오승현", "서준호", "장지우", "윤하진"
-      ];
-      const weekData = {};
-      for (let week = 1; week <= 16; week++) {
-        weekData[week] = names.map((name, index) => ({
-          id: index + 1,
-          name,
-          department: "AI빅데이터공학과",
-          studentId: "2011" + Math.floor(1000 + Math.random() * 9000),
-          grade: 4,
-          attendance: Math.random() < 0.7
-        }));
+      } catch (err) {
+        console.error("❗ 출석 데이터 로드 실패:", err);
+        alert("출석 정보를 불러오지 못했습니다.");
       }
-      localStorage.setItem("attendanceData", JSON.stringify(weekData));
     },
-    validateAttendanceData(weekData) {
-      if (!Array.isArray(weekData)) {
-        console.warn("⚠ 유효하지 않은 weekData입니다:", weekData);
-        return;
-      }
-
-      const requiredKeys = ['department', 'studentId', 'grade', 'name', 'attendance'];
-      const invalid = weekData.filter(member =>
-        requiredKeys.some(key => !(key in member))
-      );
-
-      if (invalid.length > 0) {
-        console.warn("❗ 누락된 항목이 있는 데이터:", invalid);
-      } else {
-        console.log("✅ 모든 멤버 데이터 구조가 유효합니다.");
+    async fetchClubMembers(clubId) {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/clubs/${clubId}/members`, {
+          withCredentials: true
+        });
+        return res.data;
+      } catch (err) {
+        console.error("❗ 멤버 목록 조회 실패:", err);
+        return [];
       }
     }
-  },
-  mounted() {
-    // 항상 새로운 목업 데이터로 초기화
-    localStorage.removeItem("attendanceData");
-    this.injectMockData();
   }
 };
 </script>
