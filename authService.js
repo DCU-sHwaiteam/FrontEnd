@@ -304,3 +304,31 @@ export async function deleteSchedule(clubId, scheduleId) {
     throw error.response?.data;
   }
 }
+
+// 출석 기록 조회
+export async function fetchAttendanceRecords(clubId, week) {
+  try {
+    const response = await axios.get(
+      `${API_URL}clubs/${clubId}/attendance/${week}/records`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("출석 기록 조회 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
+
+// 동아리 멤버 조회
+export async function fetchClubMembers(clubId) {
+  try {
+    const response = await axios.get(
+      `${API_URL}clubs/${clubId}/members`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("멤버 조회 실패:", error.response?.data);
+    throw error.response?.data;
+  }
+}
