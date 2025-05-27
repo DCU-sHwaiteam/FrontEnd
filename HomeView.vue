@@ -27,79 +27,119 @@
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>학번</v-list-item-title>
-                    <v-list-item-subtitle>{{ user.studentId }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{
+                      user.studentId
+                    }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>학과</v-list-item-title>
-                    <v-list-item-subtitle>{{ user.department }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{
+                      user.department
+                    }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>이메일</v-list-item-title>
-                    <v-list-item-subtitle>{{ user.email }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{
+                      user.email
+                    }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
               </v-list>
             </v-card-text>
             <v-card-actions>
-              <v-btn text color="primary" @click="editProfile">프로필 수정</v-btn>
+              <v-btn text color="primary" @click="editProfile"
+                >프로필 수정</v-btn
+              >
             </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
+
+      <!-- 숨겨진 파일 입력 -->
+      <input
+        type="file"
+        ref="fileInput"
+        style="display: none"
+        @change="onFileChange"
+      />
     </v-container>
   </v-app>
 </template>
+
 <script>
+import { fetchCurrentUser, uploadProfileImage } from "@/services/authService";
+
 export default {
   data() {
     return {
       user: {
-        profileImage: "https://via.placeholder.com/80", // 기본 프로필 이미지 URL
-        name: "홍길동",
-        studentId: "20241234",
-        department: "컴퓨터공학과",
-        email: "hong@example.com"
-      }
+        profileImage: "/static/images/default_profile.png",
+        name: "",
+        studentId: "",
+        department: "",
+        email: "",
+      },
     };
+  },
+  async mounted() {
+    try {
+      const userData = await fetchCurrentUser();
+      this.user = {
+        profileImage:
+          userData.profileImage || "/static/images/default_profile.png",
+        name: userData.name || "",
+        studentId: userData.student_id || "",
+        department: userData.department || "",
+        email: userData.email || "",
+      };
+    } catch (error) {
+      console.error("프로필 정보 로드 실패", error);
+    }
   },
   methods: {
     editProfile() {
-      console.log("프로필 수정 버튼 클릭됨");
-      // 프로필 수정 로직 추가 가능
-    }
-  }
+      this.$refs.fileInput.click();
+    },
+    async onFileChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const res = await uploadProfileImage(file);
+        this.user.profileImage = res.profileImageUrl;
+        alert("프로필 사진이 업데이트되었습니다.");
+      } catch (error) {
+        alert("프로필 사진 업로드에 실패했습니다.");
+      }
+    },
+  },
 };
 </script>
+
 <style scoped>
 .home-page {
   background-color: #f5f5f5;
   min-height: 100vh;
   padding-top: 20px;
 }
-
 .page-title {
   text-align: center;
   font-size: 2rem;
   font-weight: bold;
 }
-
 .v-avatar img {
   border-radius: 50%;
 }
-
 .v-card-title {
   display: flex;
   align-items: center;
 }
-
 .v-card-text {
   padding-top: 10px;
 }
-
 .v-card-actions {
   justify-content: flex-end;
 }
