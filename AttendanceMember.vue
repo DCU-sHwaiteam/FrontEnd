@@ -3,6 +3,13 @@
     <div class="d-flex justify-space-between align-center">
       <h1>출석 체크 페이지</h1>
       <v-btn 
+        color="secondary" 
+        class="mr-2"
+        @click="goToAttendancePage"
+      >
+        출석 명부
+      </v-btn>
+      <v-btn 
         color="primary" 
         @click="openCreateAttendanceDialog" 
         v-if="isAdmin"
@@ -250,6 +257,12 @@ export default {
 
       return now > attendanceDeadline;
     },
+    goToAttendancePage() {
+      this.$router.push({
+        name: 'AttendancePage',
+        params: { id: this.clubId }
+      });
+    }
   }
 };
 </script>
@@ -282,6 +295,14 @@ export default {
   position: absolute;
   right: 16px;
   top: 16px;
+}
+
+.d-flex.justify-space-between.align-center {
+  padding: 0 20px;
+}
+
+.v-btn.mr-2 {
+  margin-right: 8px !important;
 }
 </style>
 
