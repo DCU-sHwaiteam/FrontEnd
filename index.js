@@ -59,6 +59,7 @@ import MainPage from '@/views/mainPage.vue';
 import ClubSearch from '@/views/ClubSearch.vue'; // ClubSearch.vue 컴포넌트 경로
 import AddClub from '@/views/AddClub.vue';
 import ClubDetail from '@/views/ClubDetail.vue';
+import AttendancePage from '@/views/AttendancePage.vue';
 
 const routes = [
   {
@@ -101,6 +102,12 @@ const routes = [
     name: 'ClubDetail',
     component: ClubDetail,
     props: true // 이 설정으로 라우트 파라미터를 props 로 전달
+  },
+  {
+    path: '/club/:id/attendance',
+    name: 'AttendancePage',
+    component: AttendancePage,
+    props: true
   }
 
 ];
