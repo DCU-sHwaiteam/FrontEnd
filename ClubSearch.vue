@@ -32,7 +32,7 @@
     <!-- 검색창 -->
     <v-container class="search-container">
       <v-text-field
-        class="search-bar"
+        class="search-bar mb-6"
         label="동아리 이름으로 검색"
         v-model="searchQuery"
         append-icon="mdi-magnify"
@@ -173,6 +173,11 @@ export default {
 .search-bar .v-input__control {
   background-color: #d9d9d9;
   border-radius: 12px;
+}
+
+/* 검색창과 리스트 사이 여백 */
+.mb-6 {
+  margin-bottom: 36px !important;
 }
 
 .list-card {
