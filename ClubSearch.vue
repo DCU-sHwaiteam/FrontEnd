@@ -1,16 +1,27 @@
 <template>
   <v-app class="ClubSearch">
-    <v-app-bar app color="black" dark>
+    <!-- 상단 바 -->
+    <v-app-bar app color="#8FD6F0" dark height="64">
       <v-container>
         <v-row align="center" justify="space-between">
           <v-col>
             <v-toolbar-title>동아리 검색</v-toolbar-title>
           </v-col>
           <v-col class="info-buttons" cols="auto">
-            <v-btn icon color="white" @click="navigateToAddClub" title="동아리 추가">
+            <v-btn
+              icon
+              color="white"
+              @click="navigateToAddClub"
+              title="동아리 추가"
+            >
               <v-icon>mdi-plus</v-icon>
             </v-btn>
-            <v-btn icon color="white" @click="navigateTo('mainPage')" title="메인 페이지">
+            <v-btn
+              icon
+              color="white"
+              @click="navigateTo('mainPage')"
+              title="메인 페이지"
+            >
               <v-icon>mdi-home</v-icon>
             </v-btn>
           </v-col>
@@ -18,19 +29,27 @@
       </v-container>
     </v-app-bar>
 
+    <!-- 검색창 -->
     <v-container class="search-container">
       <v-text-field
+        class="search-bar"
         label="동아리 이름으로 검색"
         v-model="searchQuery"
         append-icon="mdi-magnify"
         placeholder="동아리 이름을 입력하세요"
+        hide-details
+        rounded
+        filled
       ></v-text-field>
 
+      <!-- 동아리 리스트 -->
       <v-row>
         <v-col
           v-for="club in filteredClubs"
           :key="club.id"
-          cols="12" sm="6" md="4"
+          cols="12"
+          sm="6"
+          md="4"
         >
           <v-card class="list-card" @click="openClubDialog(club)" hover>
             <v-card-title>{{ club.name }}</v-card-title>
@@ -41,11 +60,13 @@
       </v-row>
     </v-container>
 
+    <!-- 상세 보기 -->
     <v-dialog v-model="dialog" max-width="600px">
       <v-card v-if="selectedClub">
         <v-card-title class="headline">{{ selectedClub.name }}</v-card-title>
-        <v-card-subtitle>동아리 장: {{ selectedClub.leader_name }}</v-card-subtitle>
-
+        <v-card-subtitle
+          >동아리 장: {{ selectedClub.leader_name }}</v-card-subtitle
+        >
         <v-card-text>
           <p>지도 교수: {{ selectedClub.advisor }}</p>
           <p>최대 인원수: {{ selectedClub.max_members }}</p>
@@ -54,7 +75,6 @@
           <p>태그: {{ selectedClub.tags }}</p>
           <p>소개: {{ selectedClub.description }}</p>
         </v-card-text>
-
         <v-card-actions>
           <v-btn color="primary" @click="confirmApplyDialog = true">신청</v-btn>
           <v-btn color="grey" @click="dialog = false">나가기</v-btn>
@@ -62,6 +82,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- 신청 확인 다이얼로그 -->
     <v-dialog v-model="confirmApplyDialog" max-width="400px">
       <v-card>
         <v-card-title class="headline">동아리 신청 확인</v-card-title>
@@ -79,32 +100,7 @@
 import axios from "axios";
 import { fetchClubs, joinClub } from "@/services/authService";
 
-const API_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000/';
-
-const mockClubs = [
-  {
-    id: 1,
-    name: "프론트엔드 연구회",
-    leader_name: "김철수",
-    description: "Vue.js와 React를 중심으로 웹 프론트엔드를 공부하는 동아리입니다.",
-    advisor: "이교수",
-    max_members: 20,
-    current_members: 10,
-    activity_schedule: "매주 수요일 오후 5시",
-    tags: "프론트엔드,웹,코딩"
-  },
-  {
-    id: 2,
-    name: "AI 딥러닝 클럽",
-    leader_name: "이영희",
-    description: "AI와 딥러닝에 관심 있는 학생들이 모여 함께 프로젝트를 진행합니다.",
-    advisor: "김교수",
-    max_members: 15,
-    current_members: 12,
-    activity_schedule: "매주 금요일 오후 3시",
-    tags: "AI,딥러닝,ML"
-  }
-];
+const API_URL = process.env.VUE_APP_API_BASE_URL || "http://localhost:8000/";
 
 export default {
   name: "clubSearch",
@@ -119,19 +115,15 @@ export default {
   },
   computed: {
     filteredClubs() {
-      return this.clubs.filter(club =>
+      return this.clubs.filter((club) =>
         club.name.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
-    }
+    },
   },
   methods: {
     async fetchClubList() {
       try {
-        if (process.env.NODE_ENV === "development") {
-          this.clubs = mockClubs;
-        } else {
-          this.clubs = await fetchClubs();
-        }
+        this.clubs = await fetchClubs();
       } catch (error) {
         console.error("Failed to load clubs", error);
       }
@@ -142,9 +134,12 @@ export default {
     },
     async submitApplication() {
       try {
-        const userRes = await axios.get(`${API_URL}current-user`, { withCredentials: true });
+        // 현재 로그인 유저 정보 불러오기
+        const userRes = await axios.get(`${API_URL}current-user`, {
+          withCredentials: true,
+        });
         const userId = userRes.data.user.id;
-
+        // 동아리 신청 API 호출
         await joinClub(userId, this.selectedClub.id);
 
         alert("동아리 신청이 완료되었습니다.");
@@ -159,14 +154,14 @@ export default {
       this.$router.push({ name: "AddClub" });
     },
     navigateTo(page) {
-      if (page === 'mainPage') {
+      if (page === "mainPage") {
         this.$router.push({ name: "mainPage" });
       }
-    }
+    },
   },
   mounted() {
     this.fetchClubList();
-  }
+  },
 };
 </script>
 
@@ -175,12 +170,18 @@ export default {
   margin-top: 100px;
 }
 
+.search-bar .v-input__control {
+  background-color: #d9d9d9;
+  border-radius: 12px;
+}
+
 .list-card {
+  background-color: #cdd1ff;
   padding: 16px;
   margin-bottom: 16px;
   cursor: pointer;
-  border-radius: 8px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
 
