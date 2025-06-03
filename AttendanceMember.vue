@@ -1,30 +1,29 @@
 <template>
-  <v-container>
-    <div class="d-flex justify-space-between align-center">
-      <h1>출석 체크 페이지</h1>
-      <v-btn 
-        color="secondary" 
-        class="mr-2"
-        @click="goToAttendancePage"
-      >
-        출석 명부
-      </v-btn>
-      <v-btn 
-        color="primary" 
-        @click="openCreateAttendanceDialog" 
-        v-if="isAdmin"
-      >
-        출석 생성
-      </v-btn>
+  <v-container class="attendance-member-container">
+    <!-- 상단 헤더 -->
+    <div class="attendance-header">
+      <div class="attendance-title">출석 체크</div>
+      <div class="attendance-header-btns">
+        <v-btn class="attendance-list-btn" @click="goToAttendancePage">
+          출석 명부
+        </v-btn>
+        <v-btn
+          v-if="isAdmin"
+          class="attendance-create-btn"
+          @click="openCreateAttendanceDialog"
+        >
+          출석 생성
+        </v-btn>
+      </div>
     </div>
 
-    <!-- 출석 리스트 (원형 버튼 형태) -->
-    <v-row>
-      <v-col 
-        v-for="(attendance, index) in attendanceList" 
-        :key="index" 
-        cols="3" 
-        md="2" 
+    <!-- 주차별 출석 버튼 -->
+    <v-row class="attendance-circle-row">
+      <v-col
+        v-for="(attendance, index) in attendanceList"
+        :key="index"
+        cols="3"
+        md="2"
         class="d-flex justify-center"
       >
         <v-btn
@@ -37,36 +36,43 @@
       </v-col>
     </v-row>
 
-    <!-- 출석 체크 팝업 (멤버용) -->
-    <v-dialog v-model="showAttendanceDialog" max-width="400px">
-      <v-card>
-        <v-card-title>
-          <span>{{ currentWeek }}주차 출석 체크</span>
+    <!-- 출석 체크 팝업 -->
+    <v-dialog v-model="showAttendanceDialog" max-width="420px">
+      <v-card class="attendance-popup-card">
+        <v-card-title class="attendance-popup-title">
+          {{ currentWeek }}주차 출석 체크
         </v-card-title>
-
         <v-card-text>
-          <v-chip 
-            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'" 
+          <!-- 관리자만 PIN 번호 확인 가능 -->
+          <v-chip
+            v-if="isAdmin && attendanceList[currentWeek - 1]?.type === 'PIN'"
             class="otp-pin"
           >
             {{ attendanceList[currentWeek - 1].pin }}
           </v-chip>
-          <p v-if="attendanceList[currentWeek - 1]?.type">
-            출석 방식: {{ attendanceList[currentWeek - 1].type }}
-          </p>
-          <p>출석 가능 시간: {{ attendanceList[currentWeek - 1]?.time }}</p>
-
-          <v-text-field 
-            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'" 
-            label="PIN 입력" 
+          <div class="attendance-popup-info">
+            <div v-if="attendanceList[currentWeek - 1]?.type">
+              <span class="popup-label">출석 방식:</span>
+              <span class="popup-value">{{ attendanceList[currentWeek - 1].type }}</span>
+            </div>
+            <div>
+              <span class="popup-label">출석 가능 시간:</span>
+              <span class="popup-value">{{ attendanceList[currentWeek - 1]?.time || '-' }}</span>
+            </div>
+          </div>
+          <v-text-field
+            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
+            label="PIN 입력"
             v-model="inputPin"
+            outlined
+            dense
+            hide-details
           ></v-text-field>
-          <p v-else-if="!attendanceList[currentWeek - 1]?.type">
+          <p v-else-if="!attendanceList[currentWeek - 1]?.type" class="popup-empty">
             아직 출석이 생성되지 않았습니다.
           </p>
         </v-card-text>
-
-        <v-card-actions class="d-flex justify-space-between align-center">
+        <v-card-actions class="attendance-popup-actions">
           <v-btn
             v-if="isAdmin"
             color="error"
@@ -74,45 +80,57 @@
           >
             출석 삭제
           </v-btn>
-          <div>
-            <v-btn text color="red" @click="showAttendanceDialog = false">닫기</v-btn>
-            <v-btn
-              v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
-              color="primary"
-              @click="checkAttendance"
-            >
-              출석
-            </v-btn>
-          </div>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showAttendanceDialog = false">닫기</v-btn>
+          <v-btn
+            v-if="attendanceList[currentWeek - 1]?.type === 'PIN'"
+            color="primary"
+            @click="checkAttendance"
+          >
+            출석
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- 출석 생성 팝업 (관리자용) -->
-    <v-dialog v-model="showCreateAttendanceDialog" max-width="400px">
-      <v-card>
+    <v-dialog v-model="showCreateAttendanceDialog" max-width="480px">
+      <v-card class="attendance-popup-card">
         <v-card-title>출석 생성</v-card-title>
         <v-card-text>
-          <v-select 
-            v-model="selectedWeek" 
-            :items="weeks" 
-            label="출석 주차 선택"
+          <v-select
+            v-model="selectedWeek"
+            :items="weeks"
+            label="출석 주차"
+            outlined
           ></v-select>
-          <v-select 
-            v-model="attendanceType" 
-            :items="attendanceTypes" 
+          <v-select
+            v-model="attendanceType"
+            :items="attendanceTypes"
             label="출석 방식"
+            outlined
           ></v-select>
-          <v-text-field 
-            v-model="attendanceTime" 
-            label="출석 마감 시간 (HH:MM 형식)" 
+          <v-text-field
+            v-model="attendanceTime"
+            label="출석 마감 시간 (HH:MM)"
             type="time"
+            outlined
           ></v-text-field>
         </v-card-text>
-
         <v-card-actions>
-          <v-btn text color="red" @click="showCreateAttendanceDialog = false">취소</v-btn>
-          <v-btn color="green" @click="createAttendance">출석 생성</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showCreateAttendanceDialog = false">취소</v-btn>
+          <v-btn color="primary" @click="createAttendance">생성</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 출석 성공 알림 팝업 -->
+    <v-dialog v-model="showSuccessDialog" max-width="320px">
+      <v-card>
+        <v-card-title class="success-title">출석에 성공했습니다</v-card-title>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" @click="showSuccessDialog = false">확인</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -120,9 +138,9 @@
 </template>
 
 <script>
-import { 
-  fetchAttendanceList, 
-  createAttendanceRecord, 
+import {
+  fetchAttendanceList,
+  createAttendanceRecord,
   markAttendance,
   deleteAttendanceRecord
 } from '@/services/authService';
@@ -142,6 +160,7 @@ export default {
     return {
       showAttendanceDialog: false,
       showCreateAttendanceDialog: false,
+      showSuccessDialog: false,
       currentWeek: 1,
       selectedWeek: 1,
       attendanceType: "PIN",
@@ -160,22 +179,11 @@ export default {
     };
   },
   mounted() {
-    this.refreshInterval = setInterval(() => {
-      this.loadAttendanceList();
-    }, 60000);
+    this.loadAttendanceList();
+    this.refreshInterval = setInterval(this.loadAttendanceList, 60000);
   },
   beforeUnmount() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
-  },
-  watch: {
-    clubId: {
-      immediate: true,
-      handler(newVal) {
-        if (newVal) this.loadAttendanceList();
-      }
-    }
+    clearInterval(this.refreshInterval);
   },
   methods: {
     async loadAttendanceList() {
@@ -212,7 +220,6 @@ export default {
     },
     async checkAttendance() {
       const attendance = this.attendanceList[this.currentWeek - 1];
-      // 마감 시간 체크 (프론트에서도, 하지만 서버가 최종 판정)
       if (this.isAttendanceClosed(this.currentWeek - 1)) {
         alert("출석 시간이 종료되었습니다.");
         return;
@@ -222,6 +229,7 @@ export default {
           await markAttendance(this.clubId, this.currentWeek, this.inputPin);
           await this.loadAttendanceList();
           this.showAttendanceDialog = false;
+          this.showSuccessDialog = true;
         } catch (error) {
           alert(error.response?.data?.message || "출석 체크 실패");
         }
@@ -238,23 +246,27 @@ export default {
         }
       }
     },
+    // 출석 성공시 초록색 유지, 출석 전엔 시간 만료시 회색
     getAttendanceColor(status, time) {
-      if (this.isAttendanceClosed(time)) return "gray";
-      return status === "출석" ? "green" 
-           : status === "결석" ? "red" 
-           : status === "미생성" ? "gray"
-           : "gray";
+      if (status === "출석") return "green";
+      if (status === "결석") return "red";
+      if (status === "미생성") return "grey";
+      // 출석/결석/미생성이 아닌 경우만 시간 체크
+      if (this.isAttendanceClosed(time)) return "grey";
+      return "grey";
     },
-    // ✅ 시간대 변환 없이 브라우저 로컬 시간 사용
-    isAttendanceClosed(index) {
-      const time = this.attendanceList[index]?.time;
+    isAttendanceClosed(indexOrTime) {
+      let time;
+      if (typeof indexOrTime === "number") {
+        time = this.attendanceList[indexOrTime]?.time;
+      } else {
+        time = indexOrTime;
+      }
       if (!time) return false;
-
-      const now = new Date(); // 브라우저 로컬 시간(KST 환경이면 KST)
+      const now = new Date();
       const [hours, minutes] = time.split(":").map(Number);
       const attendanceDeadline = new Date(now);
       attendanceDeadline.setHours(hours, minutes, 0, 0);
-
       return now > attendanceDeadline;
     },
     goToAttendancePage() {
@@ -268,41 +280,108 @@ export default {
 </script>
 
 <style scoped>
+.attendance-member-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 16px;
+}
+
+.attendance-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.attendance-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 16px;
+}
+
+.attendance-header-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.attendance-list-btn,
+.attendance-create-btn {
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.attendance-list-btn {
+  background: #b8b4e3 !important;
+  color: white !important;
+}
+
+.attendance-create-btn {
+  background: #8f9cfb !important;
+  color: white !important;
+}
+
+.attendance-circle-row {
+  margin: 0 -8px;
+}
+
 .attendance-circle {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   font-size: 18px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: transform 0.2s;
 }
 
 .attendance-circle:hover {
-  transform: scale(1.1);
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+}
+
+.attendance-popup-card {
+  padding: 24px;
+  border-radius: 16px !important;
+}
+
+.attendance-popup-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.attendance-popup-info {
+  margin-bottom: 16px;
+}
+
+.popup-label {
+  color: #666;
+  margin-right: 8px;
+}
+
+.popup-value {
+  color: #222;
+  font-weight: 500;
 }
 
 .otp-pin {
-  background-color: #ffcc00;
-  color: black;
+  background: #ffd700 !important;
+  color: black !important;
   font-weight: bold;
-  font-size: 16px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  position: absolute;
-  right: 16px;
-  top: 16px;
+  margin-bottom: 16px;
 }
 
-.d-flex.justify-space-between.align-center {
-  padding: 0 20px;
+.attendance-popup-actions {
+  padding-top: 16px;
 }
 
-.v-btn.mr-2 {
-  margin-right: 8px !important;
+.success-title {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #222;
+  margin: 24px 0 8px 0;
 }
 </style>
 
