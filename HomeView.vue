@@ -105,7 +105,7 @@ export default {
     try {
       const userData = await fetchCurrentUser();
       this.user = {
-        profileImage: userData.profileImage || "/static/images/default_profile.png",
+        profileImage: userData.profileImage || "/static/images/default_profile.png.jpg",
         name: userData.name || "",
         intro: userData.intro || "자기 소개",
         studentId: userData.student_id || "",
