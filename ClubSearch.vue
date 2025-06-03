@@ -8,20 +8,10 @@
             <v-toolbar-title>동아리 검색</v-toolbar-title>
           </v-col>
           <v-col class="info-buttons" cols="auto">
-            <v-btn
-              icon
-              color="white"
-              @click="navigateToAddClub"
-              title="동아리 추가"
-            >
+            <v-btn icon color="white" @click="navigateToAddClub" title="동아리 추가">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
-            <v-btn
-              icon
-              color="white"
-              @click="navigateTo('mainPage')"
-              title="메인 페이지"
-            >
+            <v-btn icon color="white" @click="navigateTo('mainPage')" title="메인 페이지">
               <v-icon>mdi-home</v-icon>
             </v-btn>
           </v-col>
@@ -60,35 +50,35 @@
       </v-row>
     </v-container>
 
-    <!-- 상세 보기 -->
-    <v-dialog v-model="dialog" max-width="600px">
-      <v-card v-if="selectedClub">
+    <!-- 상세 보기 팝업 -->
+    <v-dialog v-model="dialog" max-width="600px" content-class="club-detail-dialog">
+      <v-card v-if="selectedClub" class="club-detail-card">
         <v-card-title class="headline">{{ selectedClub.name }}</v-card-title>
-        <v-card-subtitle
-          >동아리 장: {{ selectedClub.leader_name }}</v-card-subtitle
-        >
+        <v-card-subtitle>동아리 장: {{ selectedClub.leader_name }}</v-card-subtitle>
         <v-card-text>
-          <p>지도 교수: {{ selectedClub.advisor }}</p>
-          <p>최대 인원수: {{ selectedClub.max_members }}</p>
-          <p>현재 인원: {{ selectedClub.current_members }}</p>
-          <p>활동 일정: {{ selectedClub.activity_schedule }}</p>
-          <p>태그: {{ selectedClub.tags }}</p>
-          <p>소개: {{ selectedClub.description }}</p>
+          <p><strong>지도 교수:</strong> {{ selectedClub.advisor }}</p>
+          <p><strong>최대 인원수:</strong> {{ selectedClub.max_members }}</p>
+          <p><strong>현재 인원:</strong> {{ selectedClub.current_members }}</p>
+          <p><strong>활동 일정:</strong> {{ selectedClub.activity_schedule }}</p>
+          <p><strong>태그:</strong> {{ selectedClub.tags }}</p>
+          <p><strong>소개:</strong> {{ selectedClub.description }}</p>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" @click="confirmApplyDialog = true">신청</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="#8f9cfb" class="white--text" @click="confirmApplyDialog = true">신청</v-btn>
           <v-btn color="grey" @click="dialog = false">나가기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 신청 확인 다이얼로그 -->
-    <v-dialog v-model="confirmApplyDialog" max-width="400px">
-      <v-card>
+    <!-- 신청 확인 팝업 -->
+    <v-dialog v-model="confirmApplyDialog" max-width="400px" content-class="apply-confirm-dialog">
+      <v-card class="apply-confirm-card">
         <v-card-title class="headline">동아리 신청 확인</v-card-title>
         <v-card-text>정말로 신청하시겠습니까?</v-card-text>
         <v-card-actions>
-          <v-btn color="primary" @click="submitApplication">확인</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="#8f9cfb" class="white--text" @click="submitApplication">확인</v-btn>
           <v-btn color="grey" @click="confirmApplyDialog = false">취소</v-btn>
         </v-card-actions>
       </v-card>
@@ -134,12 +124,10 @@ export default {
     },
     async submitApplication() {
       try {
-        // 현재 로그인 유저 정보 불러오기
         const userRes = await axios.get(`${API_URL}current-user`, {
           withCredentials: true,
         });
         const userId = userRes.data.user.id;
-        // 동아리 신청 API 호출
         await joinClub(userId, this.selectedClub.id);
 
         alert("동아리 신청이 완료되었습니다.");
@@ -192,5 +180,55 @@ export default {
 
 .list-card:hover {
   transform: translateY(-4px);
+}
+
+/* 상세 보기 팝업 스타일 */
+.club-detail-dialog {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.club-detail-card {
+  border-radius: 16px !important;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10) !important;
+  padding: 24px 32px 32px 32px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.club-detail-card v-card-title,
+.club-detail-card v-card-subtitle {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.club-detail-card p {
+  font-size: 1rem;
+  margin: 6px 0;
+}
+
+/* 신청 확인 팝업 스타일 */
+.apply-confirm-dialog {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.apply-confirm-card {
+  border-radius: 16px !important;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10) !important;
+  padding: 24px 32px 24px 32px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.apply-confirm-card v-card-title {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.apply-confirm-card v-card-text {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 24px;
 }
 </style>
