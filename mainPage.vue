@@ -53,8 +53,8 @@
       </v-row>
     </v-container>
 
-    <!-- 내 동아리 팝업 (첨부 UI 적용) -->
-    <v-dialog v-model="showMyClubPopup" max-width="700px" content-class="club-popup-dialog">
+    <!-- 내 동아리 팝업 (가로 길이 넓힘) -->
+    <v-dialog v-model="showMyClubPopup" max-width="900px" content-class="club-popup-dialog">
       <v-card class="club-popup-card">
         <v-card-title class="club-popup-title">가입된 동아리 목록</v-card-title>
         <v-divider></v-divider>
@@ -226,8 +226,9 @@ export default {
 .club-popup-card {
   border-radius: 16px !important;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10) !important;
-  padding: 24px 0 32px 0;
-  max-width: 520px;
+  padding: 32px 0 40px 0;
+  max-width: 750px;
+  min-width: 500px;
   margin: 0 auto;
 }
 
@@ -242,14 +243,15 @@ export default {
 .club-list-item {
   background: #d9d9d9;
   border-radius: 16px;
-  margin: 16px 32px 0 32px;
-  padding: 20px 24px;
+  margin: 16px 40px 0 40px;
+  padding: 24px 32px;
   font-size: 1.13rem;
   font-weight: 500;
   color: #222;
   box-shadow: 0 4px 8px rgba(0,0,0,0.07);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
+  text-align: center;
 }
 .club-list-item:hover {
   box-shadow: 0 8px 24px rgba(0,0,0,0.13);
@@ -259,8 +261,8 @@ export default {
 .club-popup-actions {
   display: flex;
   justify-content: flex-end;
-  padding-right: 36px;
-  padding-top: 16px;
+  padding-right: 48px;
+  padding-top: 20px;
 }
 
 .loading-spinner {
