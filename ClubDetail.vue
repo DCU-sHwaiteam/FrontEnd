@@ -1,40 +1,74 @@
 <template>
-  <v-container>
-    <!-- 동아리 기본 정보 -->
-    <v-card class="club-info-card">
-      <v-card-title>{{ club.name }}</v-card-title>
-      <v-card-subtitle>동아리장: {{ club.leader_name }}</v-card-subtitle>
-      <v-card-text>{{ club.description }}</v-card-text>
-    </v-card>
+  <v-app class="club-detail-page">
+    <!-- 상단 바 -->
+    <v-app-bar
+      flat
+      color="#aee3fa"
+      height="70"
+      style="box-shadow:none;"
+      class="main-app-bar"
+    >
+      <v-container class="d-flex align-center justify-space-between" style="height:100%;">
+        <div class="d-flex align-center">
+          <v-img
+            src="/static/images/logo.png"
+            alt="체크인클럽"
+            contain
+            max-height="32"
+            max-width="32"
+            class="mr-2"
+          />
+          <span class="font-weight-bold" style="font-size: 1.3rem; color: #222;">체크인클럽</span>
+        </div>
+        <div class="d-flex align-center">
+          <v-btn text class="top-link" @click="$router.push({name: 'home'})">내정보</v-btn>
+          <v-btn text class="top-link" @click="$router.push({name: 'login'})">로그아웃</v-btn>
+        </div>
+      </v-container>
+    </v-app-bar>
 
-    <!-- 탭 네비게이션 -->
-    <v-tabs v-model="activeTab">
-      <v-tab value="announcements">공지사항</v-tab>
-      <v-tab value="schedule">일정</v-tab>
-      <v-tab value="gallery">갤러리</v-tab>
-      <v-tab value="members">멤버 관리</v-tab>
-      <v-tab value="attendance">출석체크</v-tab>
-    </v-tabs>
+    <!-- 동아리 정보 헤더 (파란색 배경) -->
+    <div class="club-header-section">
+      <v-container>
+        <div class="club-info-content">
+          <h1 class="club-title">{{ club.name || '동아리 이름' }}</h1>
+          <div class="club-leader">{{ club.leader_name || '동아리 장' }}</div>
+          <div class="club-description">{{ club.description || '동아리 설명' }}</div>
+        </div>
+      </v-container>
+    </div>
 
-    <!-- 탭 내용 -->
-    <v-window v-model="activeTab">
-      <v-window-item value="announcements">
-        <AnnouncementsTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
-      </v-window-item>
-      <v-window-item value="schedule">
-        <ScheduleTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
-      </v-window-item>
-      <v-window-item value="gallery">
-        <GalleryTab v-if="club.id" :club-id="club.id" />
-      </v-window-item>
-      <v-window-item value="members">
-        <MembersTab v-if="club.id" :members="members" :club-id="club.id" />
-      </v-window-item>
-      <v-window-item value="attendance">
-        <AttendanceMember v-if="club.id" :club-id="club.id" :is-admin="isAdmin" />
-      </v-window-item>
-    </v-window>
-  </v-container>
+    <!-- 탭 네비게이션과 컨텐츠 -->
+    <v-container class="club-content-container">
+      <!-- 탭 네비게이션 -->
+      <v-tabs v-model="activeTab" class="club-tabs">
+        <v-tab value="announcements">공지사항</v-tab>
+        <v-tab value="schedule">일정</v-tab>
+        <v-tab value="gallery">갤러리</v-tab>
+        <v-tab value="members">멤버 관리</v-tab>
+        <v-tab value="attendance">출석체크</v-tab>
+      </v-tabs>
+
+      <!-- 탭 내용 -->
+      <v-window v-model="activeTab">
+        <v-window-item value="announcements">
+          <AnnouncementsTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
+        </v-window-item>
+        <v-window-item value="schedule">
+          <ScheduleTab v-if="club.id" :is-admin="isAdmin" :club-id="club.id" />
+        </v-window-item>
+        <v-window-item value="gallery">
+          <GalleryTab v-if="club.id" :club-id="club.id" />
+        </v-window-item>
+        <v-window-item value="members">
+          <MembersTab v-if="club.id" :members="members" :club-id="club.id" />
+        </v-window-item>
+        <v-window-item value="attendance">
+          <AttendanceMember v-if="club.id" :club-id="club.id" :is-admin="isAdmin" />
+        </v-window-item>
+      </v-window>
+    </v-container>
+  </v-app>
 </template>
 
 <script>
@@ -74,22 +108,17 @@ export default {
       const clubId = this.$route.params.id;
 
       try {
-        // 로그인 사용자 정보 불러오기 (예: 세션 기반)
         const userRes = await axios.get(`${API_URL}current-user`, { withCredentials: true });
         this.currentUserEmail = userRes.data.email;
 
-        // 동아리 정보 요청
         const clubRes = await axios.get(`${API_URL}clubs/${clubId}`, { withCredentials: true });
         this.club = clubRes.data;
 
-        // 동아리 멤버 목록 요청
         const membersRes = await axios.get(`${API_URL}clubs/${clubId}/members`, { withCredentials: true });
         this.members = membersRes.data;
 
-        // 현재 로그인한 유저가 동아리장인지 확인
         this.isAdmin = this.club.leader_id === userRes.data.user.id;
 
-        // 콘솔로 값 확인해보세요!
         console.log("club.leader_id:", this.club.leader_id, "user.id:", userRes.data.user.id, "isAdmin:", this.isAdmin);
       } catch (err) {
         console.error("❌ 동아리 상세 정보 로드 실패:", err.response?.data || err);
@@ -103,9 +132,82 @@ export default {
 </script>
 
 <style scoped>
-.club-info-card {
-  margin-bottom: 20px;
-  padding: 20px;
+.club-detail-page {
+  background-color: #fff;
+  min-height: 100vh;
+}
+
+.main-app-bar {
+  background-color: #aee3fa !important;
+  box-shadow: none !important;
+}
+
+.top-link {
+  color: #222 !important;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-left: 24px;
+  letter-spacing: 0.01em;
+}
+
+/* 동아리 정보 헤더 섹션 (파란색 배경) */
+.club-header-section {
+  background-color: #aee3fa;
+  width: 100%;
+  padding: 40px 0 30px 0;
+  margin-top: 0;
+}
+
+.club-info-content {
+  text-align: center;
+}
+
+.club-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #222;
+}
+
+.club-leader {
+  font-size: 1.4rem;
+  color: #333;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.club-description {
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* 탭 컨텐츠 컨테이너 */
+.club-content-container {
+  max-width: 1200px;
+  padding-top: 16px;
+}
+
+.club-tabs {
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 32px;
+  position: sticky;
+  top: 70px;
+  background-color: #fff;
+  z-index: 10;
+}
+
+/* 탭 스타일 개선 */
+.club-tabs >>> .v-tab {
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.club-tabs >>> .v-tab--selected {
+  color: #1976d2 !important;
 }
 </style>
   
