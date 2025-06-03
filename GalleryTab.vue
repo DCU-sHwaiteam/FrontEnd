@@ -16,6 +16,7 @@
         md="4"
         lg="3"
         class="d-flex justify-center"
+        style="padding-left: 6px; padding-right: 6px; margin-bottom: 18px;"
       >
         <div class="photo-card" @click="openImageViewer(index)">
           <div class="photo-preview">
@@ -171,14 +172,14 @@ export default {
   margin-bottom: 18px;
 }
 
-/* 이하 기존 스타일 유지 (생략 없이 전체) */
+/* 사진 카드 크기 키우고 간격 좁힘 */
 .photo-card {
   background: #eef0fb;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  width: 240px;
-  min-height: 260px;
-  margin: 18px 10px 18px 10px;
+  width: 290px;
+  min-height: 320px;
+  margin: 10px 4px 10px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -192,11 +193,11 @@ export default {
   transform: translateY(-2px) scale(1.01);
 }
 .photo-preview {
-  width: 90%;
-  height: 100px;
+  width: 92%;
+  height: 140px;
   margin-top: 24px;
   background: #e5e5ee;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +211,7 @@ export default {
 }
 .photo-preview img {
   max-width: 100%;
-  max-height: 80px;
+  max-height: 120px;
   object-fit: contain;
 }
 .preview-placeholder {
@@ -221,14 +222,14 @@ export default {
 .photo-info {
   width: 100%;
   text-align: center;
-  margin-top: 16px;
+  margin-top: 18px;
   margin-bottom: 12px;
 }
 .photo-title {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: #222;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 .photo-desc {
   font-size: 1rem;
