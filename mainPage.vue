@@ -1,60 +1,86 @@
 <template>
   <v-app class="main-page">
     <!-- 상단 바 -->
-    <v-app-bar app color="black" dark>
-      <v-container>
-        <v-row align="center" justify="space-between">
-          <v-col>
-            <v-toolbar-title class="title">DCU 동아리</v-toolbar-title>
-          </v-col>
-          <v-col class="info-buttons" cols="auto">
-            <v-btn text color="white" @click="navigateTo('home')">내 정보</v-btn>
-            <v-btn text color="white" @click="logout">로그아웃</v-btn>
-          </v-col>
-        </v-row>
+    <v-app-bar
+      flat
+      color="#aee3fa"
+      height="70"
+      style="box-shadow:none;"
+      class="main-app-bar"
+    >
+      <v-container class="d-flex align-center justify-space-between" style="height:100%;">
+        <div class="d-flex align-center">
+          <v-img
+            src="/static/images/logo.png"
+            alt="체크인클럽"
+            contain
+            max-height="32"
+            max-width="32"
+            class="mr-2"
+          />
+          <span class="font-weight-bold" style="font-size: 1.3rem; color: #222;">체크인클럽</span>
+        </div>
+        <div class="d-flex align-center">
+          <v-btn text class="top-link" @click="navigateTo('home')">내정보</v-btn>
+          <v-btn text class="top-link" @click="logout">로그아웃</v-btn>
+        </div>
       </v-container>
     </v-app-bar>
 
-    <!-- 중앙 카드 스타일 버튼들 -->
-    <v-container class="center-content">
-      <v-row justify="center" class="button-row">
-        <v-col cols="12" sm="8" md="6">
-          <v-card class="list-card" @click="openMyClubPopup" hover>
-            <v-card-title>내 동아리</v-card-title>
-            <v-card-subtitle>내 동아리를 관리하고 확인하세요</v-card-subtitle>
-          </v-card>
-          <v-card class="list-card" @click="navigateTo('clubSearch')" hover>
-            <v-card-title>동아리 검색</v-card-title>
-            <v-card-subtitle>다른 동아리를 찾아보세요</v-card-subtitle>
-          </v-card>
+    <!-- 중앙 큰 버튼 -->
+    <v-container class="main-center-content">
+      <v-row justify="center" align="center" no-gutters>
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <div
+            class="main-big-btn"
+            @click="openMyClubPopup"
+            tabindex="0"
+          >
+            내 동아리
+            <div class="main-btn-arrow"></div>
+          </div>
+        </v-col>
+        <v-col cols="12" sm="6" md="4" class="d-flex justify-center">
+          <div
+            class="main-big-btn"
+            @click="navigateTo('clubSearch')"
+            tabindex="0"
+          >
+            동아리 검색
+            <div class="main-btn-arrow"></div>
+          </div>
         </v-col>
       </v-row>
     </v-container>
 
-    <!-- 내 동아리 팝업 -->
-    <v-dialog v-model="showMyClubPopup" max-width="500px">
-      <v-card>
-        <v-card-title>가입된 동아리 목록</v-card-title>
+    <!-- 내 동아리 팝업 (첨부 UI 적용) -->
+    <v-dialog v-model="showMyClubPopup" max-width="700px" content-class="club-popup-dialog">
+      <v-card class="club-popup-card">
+        <v-card-title class="club-popup-title">가입된 동아리 목록</v-card-title>
         <v-divider></v-divider>
         <v-card-text>
           <div v-if="loading" class="loading-spinner">
             <v-progress-circular indeterminate color="primary"></v-progress-circular>
           </div>
-          <v-list v-else>
-            <v-list-item
-              v-for="club in approvedClubs"
-              :key="club.id"
-              @click="navigateToClubDetail(club.id)"
-            >
-              <v-list-item-content>
-                <v-list-item-title>{{ club.name }}</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
+          <div v-else>
+            <div v-if="approvedClubs && approvedClubs.length > 0">
+              <div
+                v-for="club in approvedClubs"
+                :key="'club-'+club.id"
+                class="club-list-item"
+                @click="navigateToClubDetail(club.id)"
+              >
+                {{ club.name }}
+              </div>
+            </div>
+            <div v-else class="empty-message">
+              가입된 동아리가 없습니다.
+            </div>
+          </div>
         </v-card-text>
-        <v-card-actions>
-          <v-btn color="grey" text @click="showMyClubPopup = false">닫기</v-btn>
-        </v-card-actions>
+        <div class="club-popup-actions">
+          <v-btn color="#b8b4e3" class="white--text" @click="showMyClubPopup = false">닫기</v-btn>
+        </div>
       </v-card>
     </v-dialog>
   </v-app>
@@ -78,28 +104,27 @@ export default {
     },
     async loadApprovedClubs() {
       this.loading = true;
-
-      // 개발 환경에서만 목업 데이터 사용
       if (process.env.NODE_ENV === 'development') {
         this.approvedClubs = [
-          { id: 1, name: '인공지능 동아리' },
-          { id: 2, name: '프로그래밍 학회' }
+          { id: 1, name: '가입된 동아리 1' },
+          { id: 2, name: '가입된 동아리 2' }
         ];
         this.loading = false;
         return;
       }
-
-      // 운영 환경에서는 API 호출
       try {
         const response = await axios.get('/api/my-clubs', { withCredentials: true });
-        if (response.data.success) {
-          this.approvedClubs = response.data.clubs;
+        if (Array.isArray(response.data)) {
+          this.approvedClubs = [...response.data];
+        } else if (response.data && Array.isArray(response.data.clubs)) {
+          this.approvedClubs = [...response.data.clubs];
         } else {
-          console.error('동아리 목록을 불러오는 데 실패했습니다.');
+          this.approvedClubs = [];
         }
       } catch (error) {
-        console.error('동아리 목록을 불러오는 중 오류 발생:', error);
+        console.error('동아리 목록을 불러오는 데 실패했습니다.', error);
         alert('동아리 목록을 불러오지 못했습니다. 다시 시도해주세요.');
+        this.approvedClubs = [];
       } finally {
         this.loading = false;
       }
@@ -112,7 +137,6 @@ export default {
       this.showMyClubPopup = false;
     },
     logout() {
-      console.log("로그아웃되었습니다.");
       this.$router.push({ name: 'login' });
     }
   }
@@ -121,51 +145,122 @@ export default {
 
 <style scoped>
 .main-page {
-  background-color: #f5f5f5;
+  background-color: #fff;
+  min-height: 100vh;
 }
 
-.title {
-  font-size: 2rem;
-  text-align: left;
+.main-app-bar {
+  background-color: #aee3fa !important;
+  box-shadow: none !important;
 }
 
-.info-buttons {
-  display: flex;
-  gap: 10px;
+.top-link {
+  color: #222 !important;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-left: 24px;
+  letter-spacing: 0.01em;
 }
 
-.center-content {
-  height: 80vh;
+.main-center-content {
+  min-height: 70vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.button-row {
-  gap: 16px;
-}
-
-.list-card {
-  padding: 16px;
-  margin-bottom: 16px;
+.main-big-btn {
+  width: 270px;
+  height: 120px;
+  background: #6b9bc6;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 400;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  margin: 32px 24px;
+  padding: 0 36px 0 36px;
+  position: relative;
   cursor: pointer;
-  border-radius: 8px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
+  transition: box-shadow 0.2s, transform 0.2s;
+  outline: none;
+}
+.main-big-btn:focus,
+.main-big-btn:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  transform: translateY(-2px) scale(1.03);
 }
 
-.list-card:hover {
-  transform: translateY(-4px);
+.main-btn-arrow {
+  width: 80%;
+  height: 2px;
+  background: #fff;
+  margin-top: 18px;
+  border-radius: 1px;
+  position: relative;
+}
+.main-btn-arrow::after {
+  content: '';
+  display: block;
+  position: absolute;
+  right: 0;
+  top: -4px;
+  width: 18px;
+  height: 18px;
+  border-bottom: 2px solid #fff;
+  border-right: 2px solid #fff;
+  transform: rotate(-45deg);
+  border-radius: 2px;
 }
 
-.v-card-title {
-  font-size: 1.2rem;
+/* 팝업 스타일 */
+.club-popup-dialog {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.club-popup-card {
+  border-radius: 16px !important;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.10) !important;
+  padding: 24px 0 32px 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.club-popup-title {
+  text-align: center;
+  font-size: 1.3rem;
   font-weight: bold;
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
 }
 
-.v-card-subtitle {
-  color: #666;
-  font-size: 0.9rem;
+.club-list-item {
+  background: #d9d9d9;
+  border-radius: 16px;
+  margin: 16px 32px 0 32px;
+  padding: 20px 24px;
+  font-size: 1.13rem;
+  font-weight: 500;
+  color: #222;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.club-list-item:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.club-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 36px;
+  padding-top: 16px;
 }
 
 .loading-spinner {
@@ -173,6 +268,13 @@ export default {
   justify-content: center;
   align-items: center;
   height: 150px;
+}
+
+.empty-message {
+  text-align: center;
+  color: #aaa;
+  margin-top: 24px;
+  font-size: 1.1rem;
 }
 </style>
 
