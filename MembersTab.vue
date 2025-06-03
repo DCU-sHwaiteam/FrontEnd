@@ -1,10 +1,9 @@
 <template>
-  <v-container>
-    <h2>멤버 관리</h2>
-    <p>동아리 회원을 관리하는 공간입니다.</p>
-
-    <!-- 신청 목록 보기 버튼 -->
-    <v-btn color="primary" @click="openApplicationsDialog">신청 목록 보기</v-btn>
+  <v-container class="members-container">
+    <div class="members-header">
+      <div class="members-title">멤버 관리</div>
+      <v-btn class="members-apply-btn" @click="openApplicationsDialog">신청 목록 보기</v-btn>
+    </div>
 
     <!-- 신청 목록 팝업 -->
     <v-dialog v-model="applicationsDialog" max-width="500px">
@@ -13,26 +12,15 @@
         <v-card-text>
           <v-list>
             <v-list-item v-for="applicant in applications" :key="applicant.id">
-              <div class="member-item">
-                <!-- 프로필 -->
-                <div class="profile-container">
-                  <v-avatar size="50">
-                    <img :src="applicant.profile_image || defaultProfileImage" alt="프로필 사진" />
-                  </v-avatar>
+              <div class="member-card">
+                <v-avatar size="40" class="member-avatar">
+                  <img :src="applicant.profile_image || defaultProfileImage" alt="프로필 사진" />
+                </v-avatar>
+                <div class="member-info">
+                  <div class="member-name">{{ applicant.name }}</div>
+                  <div class="member-detail">{{ applicant.department }} | {{ applicant.student_id }}</div>
                 </div>
-
-                <div class="divider"></div>
-
-                <!-- 정보 영역 -->
-                <div class="info-container">
-                  <div class="name">{{ applicant.name }}</div>
-                  <div class="details">{{ applicant.department }} | {{ applicant.student_id }}</div>
-                </div>
-
-                <!-- 승인 버튼 -->
-                <div class="button-container">
-                  <v-btn color="green" @click="approveMember(applicant.id)">승인</v-btn>
-                </div>
+                <v-btn color="#b8b4e3" class="approve-btn white--text" @click="approveMember(applicant.id)">승인</v-btn>
               </div>
             </v-list-item>
             <v-list-item v-if="applications.length === 0">
@@ -46,45 +34,38 @@
       </v-card>
     </v-dialog>
 
-    <!-- 현재 멤버 목록 -->
-    <v-list>
-      <v-list-item v-for="member in members" :key="member.id">
-        <div class="member-item">
-          <div class="profile-container">
-            <v-avatar size="50">
-              <img :src="member.profile_image || defaultProfileImage" alt="프로필 사진" />
-            </v-avatar>
-          </div>
-          <div class="divider"></div>
-          <div class="info-container">
-            <div class="name">{{ member.name }}</div>
-            <div class="details">{{ member.department }} | {{ member.student_id }}</div>
-          </div>
-          <div class="button-container">
-            <v-btn color="red" @click="removeMember(member.id)">삭제</v-btn>
-          </div>
+    <!-- 현재 멤버 목록 (카드형) -->
+    <div class="members-list">
+      <div
+        v-for="member in members"
+        :key="member.id"
+        class="member-card"
+      >
+        <v-avatar size="40" class="member-avatar">
+          <img :src="member.profile_image || defaultProfileImage" alt="프로필 사진" />
+        </v-avatar>
+        <div class="member-info">
+          <div class="member-name">{{ member.name }}</div>
+          <div class="member-detail">내 정보</div>
         </div>
-      </v-list-item>
-      <v-list-item v-if="members.length === 0">
-        <span>등록된 멤버가 없습니다.</span>
-      </v-list-item>
-    </v-list>
+        <v-btn color="#f5a2a2" class="delete-btn white--text" @click="removeMember(member.id)">삭제</v-btn>
+      </div>
+      <div v-if="members.length === 0" class="empty-message">
+        등록된 멤버가 없습니다.
+      </div>
+    </div>
   </v-container>
 </template>
 
-
-
 <script>
-
 import axios from 'axios';
+import {
+  fetchClubApplications,
+  approveMembership,
+  deleteMember
+} from '@/services/authService';
 
 const API_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000';
-
-import { 
-  fetchClubApplications, 
-  approveMembership, 
-  deleteMember 
-} from '@/services/authService'; // authService.js에서 함수 불러오기
 
 export default {
   name: 'MembersTab',
@@ -99,15 +80,15 @@ export default {
       applicationsDialog: false,
       applications: [],
       members: [],
-      defaultProfileImage: "https://via.placeholder.com/50"
+      // EC2 서버에서 /static/images/human.png로 접근 가능해야 함
+      defaultProfileImage: "/static/images/human.png"
     };
   },
   methods: {
-    // 멤버 목록 불러오기 (axios 직접 사용, 필요하다면 authService에 함수 추가 가능)
     async fetchMembers() {
       try {
-        const response = await axios.get(`${API_URL}clubs/${this.clubId}/members`, { 
-        withCredentials: true 
+        const response = await axios.get(`${API_URL}clubs/${this.clubId}/members`, {
+          withCredentials: true
         });
         this.members = await response.data;
       } catch (err) {
@@ -115,7 +96,6 @@ export default {
         this.members = [];
       }
     },
-    // 신청 목록 불러오기 (authService 함수 사용)
     async fetchApplications() {
       try {
         this.applications = await fetchClubApplications(this.clubId);
@@ -128,7 +108,6 @@ export default {
       this.fetchApplications();
       this.applicationsDialog = true;
     },
-    // 승인 (authService 함수 사용)
     async approveMember(applicantId) {
       try {
         await approveMembership(applicantId, this.clubId);
@@ -140,7 +119,6 @@ export default {
         alert("승인에 실패했습니다.");
       }
     },
-    // 삭제 (authService 함수 사용)
     async removeMember(memberId) {
       try {
         await deleteMember(this.clubId, memberId);
@@ -166,43 +144,88 @@ export default {
 </script>
 
 <style scoped>
-.member-item {
+.members-container {
+  padding: 32px 0 0 0;
+}
+.members-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.members-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 10px;
+}
+.members-apply-btn {
+  background: #b8b4e3 !important;
+  color: #fff !important;
+  font-weight: 500;
+  min-width: 140px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 18px;
+}
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 12px;
+}
+.member-card {
+  background: #f5f5f5;
+  border-radius: 12px;
+  box-shadow: none;
   display: flex;
   align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  justify-content: flex-start;
-  gap: 15px;
+  padding: 14px 18px;
+  min-height: 56px;
+  margin-bottom: 0;
+  gap: 16px;
 }
-.profile-container {
-  flex: 0 0 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.member-avatar {
+  background: #e0e0e0;
 }
-.divider {
-  width: 2px;
-  height: 40px;
-  background-color: #ccc;
-}
-.info-container {
+.member-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  text-align: left;
+  margin-left: 10px;
 }
-.button-container {
-  flex: 0 0 auto;
+.member-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 2px;
+}
+.member-detail {
+  font-size: 0.95rem;
+  color: #888;
+}
+.delete-btn {
+  background: #f5a2a2 !important;
+  color: #fff !important;
+  font-weight: 500;
+  border-radius: 8px;
+  min-width: 56px;
   margin-left: auto;
 }
-.name {
-  font-weight: bold;
-  font-size: 16px;
+.approve-btn {
+  background: #b8b4e3 !important;
+  color: #fff !important;
+  font-weight: 500;
+  border-radius: 8px;
+  min-width: 56px;
+  margin-left: auto;
 }
-.details {
-  font-size: 14px;
-  color: #666;
+.empty-message {
+  text-align: center;
+  color: #aaa;
+  margin-top: 32px;
+  font-size: 1.1rem;
 }
 </style>
   
