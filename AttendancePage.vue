@@ -1,18 +1,36 @@
 <template>
-  <v-app>
-    <v-app-bar app color="black" dark>
-      <v-container>
-        <v-row align="center" justify="space-between">
-          <v-col>
-            <v-toolbar-title>동아리 출석 명부</v-toolbar-title>
-          </v-col>
-        </v-row>
+  <v-app class="attendance-page">
+    <!-- 상단 바 -->
+    <v-app-bar
+      flat
+      color="#aee3fa"
+      height="70"
+      style="box-shadow:none;"
+      class="main-app-bar"
+    >
+      <v-container class="d-flex align-center justify-space-between" style="height:100%;">
+        <div class="d-flex align-center">
+          <v-img
+            src="/static/images/logo.png"
+            alt="체크인클럽"
+            contain
+            max-height="32"
+            max-width="32"
+            class="mr-2"
+          />
+          <span class="font-weight-bold" style="font-size: 1.3rem; color: #222;">체크인클럽</span>
+        </div>
+        <div class="d-flex align-center">
+          <v-btn text class="top-link" @click="$router.push({name: 'home'})">내정보</v-btn>
+          <v-btn text class="top-link" @click="$router.push({name: 'login'})">로그아웃</v-btn>
+        </div>
       </v-container>
     </v-app-bar>
 
     <!-- 주차별 출석 버튼 -->
-    <v-container class="mt-16">
-      <v-row>
+    <v-container class="attendance-container">
+      <div class="attendance-title">출석 관리</div>
+      <v-row class="week-buttons">
         <v-col
           v-for="week in 16"
           :key="week"
@@ -21,7 +39,7 @@
           class="d-flex justify-center"
         >
           <v-btn
-            :style="{ backgroundColor: '#add8e6', color: '#000' }"
+            class="week-btn"
             @click="viewWeekAttendance(week)"
           >
             {{ week }}주차
@@ -30,38 +48,45 @@
       </v-row>
     </v-container>
 
-    <!-- 출석/결석 현황 다이얼로그 -->
-    <v-dialog v-model="dialog" max-width="900px">
-      <v-card>
-        <v-card-title class="headline"
-          >{{ selectedWeek }}주차 출석 현황</v-card-title
-        >
+    <!-- 출석 현황 다이얼로그 -->
+    <v-dialog v-model="dialog" max-width="900px" content-class="attendance-dialog">
+      <v-card class="attendance-card">
+        <v-card-title class="dialog-title">
+          {{ selectedWeek }}주차 출석 현황
+        </v-card-title>
         <v-card-text>
-          <p><strong>전체 인원:</strong> {{ totalCount }}명</p>
-          <p><strong>출석한 인원:</strong> {{ presentCount }}명</p>
-          <p><strong>결석한 인원:</strong> {{ absentCount }}명</p>
-          <v-divider class="my-2"></v-divider>
-
+          <div class="stats-row">
+            <div class="stat-item">
+              <div class="stat-label">전체 인원</div>
+              <div class="stat-value">{{ totalCount }}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">출석</div>
+              <div class="stat-value present">{{ presentCount }}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">결석</div>
+              <div class="stat-value absent">{{ absentCount }}</div>
+            </div>
+          </div>
+          
           <v-data-table
             v-if="members.length > 0"
             :headers="tableHeaders"
             :items="members"
-            class="elevation-1"
+            class="attendance-table"
             dense
-            item-value="id"
             hide-default-footer
           >
             <template #item="{ item }">
-              <tr>
+              <tr :class="item.attendance ? 'present-row' : 'absent-row'">
                 <td>{{ item.department }}</td>
                 <td>{{ item.studentId }}</td>
                 <td>{{ item.grade }}</td>
                 <td>{{ item.name }}</td>
-                <td>
-                  <v-icon :color="item.attendance ? 'green' : 'red'">
-                    {{
-                      item.attendance ? "mdi-check-circle" : "mdi-close-circle"
-                    }}
+                <td class="text-center">
+                  <v-icon :color="item.attendance ? '#4CAF50' : '#F44336'">
+                    {{ item.attendance ? "mdi-check-circle" : "mdi-close-circle" }}
                   </v-icon>
                 </td>
               </tr>
@@ -69,7 +94,7 @@
           </v-data-table>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="grey" @click="dialog = false">닫기</v-btn>
+          <v-btn color="#828191" class="white--text" @click="dialog = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -86,7 +111,6 @@ export default {
   name: "AttendancePage",
   props: {
     id: {
-      // 라우트 파라미터로 받은 clubId
       type: [String, Number],
       required: true,
     },
@@ -97,11 +121,11 @@ export default {
       dialog: false,
       weekAttendanceData: {},
       tableHeaders: [
-        { text: "학과", value: "department" },
-        { text: "학번", value: "studentId" },
-        { text: "학년", value: "grade" },
-        { text: "이름", value: "name" },
-        { text: "출석 여부", value: "attendance" },
+        { text: "학과", value: "department", width: "25%" },
+        { text: "학번", value: "studentId", width: "20%" },
+        { text: "학년", value: "grade", width: "15%" },
+        { text: "이름", value: "name", width: "20%" },
+        { text: "출석 여부", value: "attendance", align: 'center', width: "20%" },
       ],
       clubId: this.id,
     };
@@ -136,7 +160,6 @@ export default {
           fetchAttendanceRecords(this.clubId, week),
         ]);
 
-        // ✅ 출석 여부를 status 필드로 확인
         const enrichedMembers = members.map((member) => {
           const record = attendanceRecords.find((r) => r.user_id === member.id);
           return {
@@ -157,7 +180,115 @@ export default {
 </script>
 
 <style scoped>
-.mt-16 {
-  margin-top: 130px;
+.attendance-page {
+  background: #fff;
+}
+
+.main-app-bar {
+  background-color: #aee3fa !important;
+}
+
+.top-link {
+  color: #222 !important;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-left: 24px;
+}
+
+.attendance-container {
+  max-width: 1200px;
+  margin: 100px auto 0;
+  padding: 0 16px;
+}
+
+.attendance-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #222;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.week-buttons {
+  margin-top: 24px;
+}
+
+.week-btn {
+  background: #b8b4e3 !important;
+  color: #fff !important;
+  font-weight: 500;
+  width: 100%;
+  min-width: 80px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: all 0.2s;
+}
+
+.week-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.attendance-card {
+  border-radius: 20px !important;
+  padding: 32px;
+}
+
+.dialog-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #222;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 32px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.present { color: #4CAF50; }
+.absent { color: #F44336; }
+
+.attendance-table {
+  margin-top: 24px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.present-row {
+  background: #f5fbf5 !important;
+}
+
+.absent-row {
+  background: #fff5f5 !important;
+}
+
+.attendance-table >>> thead th {
+  background: #f8f9fa !important;
+  font-weight: 600 !important;
+  color: #222 !important;
+}
+
+.attendance-table >>> tbody td {
+  font-size: 0.95rem;
 }
 </style>
