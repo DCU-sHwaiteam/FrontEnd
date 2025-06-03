@@ -1,12 +1,18 @@
 <template>
   <v-container class="announcements-container">
+    <!-- 상단 헤더: 제목과 버튼을 모두 중앙 세로 정렬 -->
     <div class="announcements-header">
-      <h2 class="announcements-title">공지사항</h2>
-      <v-btn v-if="isAdmin" color="#b8b4e3" class="white--text add-btn" @click="openDialog">
+      <div class="announcements-title">공지사항</div>
+      <v-btn
+        v-if="isAdmin"
+        class="announcements-add-btn"
+        @click="openDialog"
+      >
         추가
       </v-btn>
     </div>
 
+    <!-- 공지사항 카드 리스트 -->
     <v-row>
       <v-col v-for="announcement in announcements" :key="announcement.id" cols="12" sm="6" md="4">
         <v-card class="announcement-card">
@@ -101,27 +107,33 @@ export default {
 
 <style scoped>
 .announcements-container {
-  padding: 24px 0;
+  padding: 32px 0 0 0;
 }
 
+/* 중앙 세로 정렬 헤더 */
 .announcements-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
-
 .announcements-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #222;
+  margin-bottom: 10px;
 }
-
-.add-btn {
-  min-width: 80px;
+.announcements-add-btn {
+  background: #b8b4e3 !important;
+  color: #fff !important;
   font-weight: 500;
+  min-width: 140px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 18px;
 }
 
+/* 공지 카드 스타일 (기존 유지) */
 .announcement-card {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -157,7 +169,7 @@ export default {
   padding-bottom: 12px;
 }
 
-/* 팝업 스타일 */
+/* 팝업 스타일 (기존 유지) */
 .add-announcement-dialog {
   background: transparent !important;
   box-shadow: none !important;
