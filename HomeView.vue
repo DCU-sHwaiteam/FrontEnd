@@ -1,64 +1,77 @@
 <template>
   <v-app class="home-page">
-    <v-container>
-      <!-- 제목 -->
-      <v-row justify="center" class="mb-4">
-        <v-col cols="12" md="8" lg="6">
-          <h2 class="page-title">내 정보</h2>
-        </v-col>
-      </v-row>
+    <!-- 상단 바 -->
+    <v-app-bar
+      flat
+      color="#aee3fa"
+      height="70"
+      style="box-shadow:none;"
+      class="main-app-bar"
+    >
+      <v-container class="d-flex align-center justify-space-between" style="height:100%;">
+        <div class="d-flex align-center">
+          <v-img
+            src="/static/images/logo.png"
+            alt="체크인클럽"
+            contain
+            max-height="32"
+            max-width="32"
+            class="mr-2"
+          />
+          <span class="font-weight-bold" style="font-size: 1.3rem; color: #222;">체크인클럽</span>
+        </div>
+        <div class="d-flex align-center">
+          <v-btn text class="top-link" @click="$router.push({name: 'home'})">내정보</v-btn>
+          <v-btn text class="top-link" @click="$router.push({name: 'login'})">로그아웃</v-btn>
+        </div>
+      </v-container>
+    </v-app-bar>
 
-      <!-- 프로필 카드 -->
+    <v-container class="info-container">
       <v-row justify="center">
         <v-col cols="12" md="8" lg="6">
-          <v-card>
-            <v-card-title>
-              <v-avatar size="80" class="mr-4">
+          <v-card class="profile-card" elevation="4">
+            <!-- 프로필 상단 -->
+            <div class="profile-header d-flex align-center">
+              <v-avatar size="80" class="profile-avatar mr-4" @click="editProfile" style="cursor:pointer;">
                 <img :src="user.profileImage" alt="프로필 사진" />
               </v-avatar>
               <div>
-                <h3>{{ user.name }}</h3>
-                <p class="text-subtitle-1">{{ user.department }}</p>
+                <div class="profile-name">{{ user.name || '이름' }}</div>
+                <div class="profile-desc">{{ user.intro || '자기 소개' }}</div>
               </div>
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text>
-              <v-list dense>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>학번</v-list-item-title>
-                    <v-list-item-subtitle>{{
-                      user.studentId
-                    }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>학과</v-list-item-title>
-                    <v-list-item-subtitle>{{
-                      user.department
-                    }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-content>
-                    <v-list-item-title>이메일</v-list-item-title>
-                    <v-list-item-subtitle>{{
-                      user.email
-                    }}</v-list-item-subtitle>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn text color="primary" @click="editProfile"
-                >프로필 수정</v-btn
-              >
+            </div>
+            <v-divider class="my-2"></v-divider>
+            <!-- 정보 리스트 -->
+            <div class="profile-info-list">
+              <div class="profile-info-row">
+                <span class="profile-info-title">학번</span>
+                <span class="profile-info-value">{{ user.studentId || '학번' }}</span>
+              </div>
+              <div class="profile-info-row">
+                <span class="profile-info-title">학과</span>
+                <span class="profile-info-value">{{ user.department || '학과' }}</span>
+              </div>
+              <div class="profile-info-row">
+                <span class="profile-info-title">이메일</span>
+                <span class="profile-info-value">{{ user.email || '이메일' }}</span>
+              </div>
+              <div class="profile-info-row">
+                <span class="profile-info-title">전화번호</span>
+                <span class="profile-info-value">{{ user.phone || '전화번호' }}</span>
+              </div>
+              <div class="profile-info-row">
+                <span class="profile-info-title">가입된 동아리</span>
+                <span class="profile-info-value profile-info-muted">{{ user.clubs || '가입된 동아리' }}</span>
+              </div>
+            </div>
+            <v-card-actions class="profile-actions">
+              <v-spacer></v-spacer>
+              <v-btn color="#b8b4e3" class="white--text" @click="editProfile" style="min-width:110px;">프로필 수정</v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
-
       <!-- 숨겨진 파일 입력 -->
       <input
         type="file"
@@ -79,9 +92,12 @@ export default {
       user: {
         profileImage: "/static/images/default_profile.png",
         name: "",
+        intro: "",
         studentId: "",
         department: "",
         email: "",
+        phone: "",
+        clubs: ""
       },
     };
   },
@@ -89,12 +105,14 @@ export default {
     try {
       const userData = await fetchCurrentUser();
       this.user = {
-        profileImage:
-          userData.profileImage || "/static/images/default_profile.png",
+        profileImage: userData.profileImage || "/static/images/default_profile.png",
         name: userData.name || "",
+        intro: userData.intro || "자기 소개",
         studentId: userData.student_id || "",
         department: userData.department || "",
         email: userData.email || "",
+        phone: userData.phone || "",
+        clubs: userData.clubs ? userData.clubs.join(', ') : "가입된 동아리"
       };
     } catch (error) {
       console.error("프로필 정보 로드 실패", error);
@@ -121,26 +139,77 @@ export default {
 
 <style scoped>
 .home-page {
-  background-color: #f5f5f5;
+  background-color: #fff;
   min-height: 100vh;
-  padding-top: 20px;
 }
-.page-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
+.main-app-bar {
+  background-color: #aee3fa !important;
+  box-shadow: none !important;
 }
-.v-avatar img {
-  border-radius: 50%;
+.top-link {
+  color: #222 !important;
+  font-weight: 500;
+  font-size: 1rem;
+  margin-left: 24px;
+  letter-spacing: 0.01em;
 }
-.v-card-title {
+.info-container {
+  min-height: 80vh;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
-.v-card-text {
-  padding-top: 10px;
+.profile-card {
+  margin: 56px auto 0 auto;
+  border-radius: 16px;
+  max-width: 480px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+  padding: 0 0 12px 0;
 }
-.v-card-actions {
-  justify-content: flex-end;
+.profile-header {
+  padding: 32px 32px 0 32px;
+}
+.profile-avatar {
+  background: #e0e0e0;
+}
+.profile-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.profile-desc {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 2px;
+}
+.profile-info-list {
+  padding: 24px 0 0 0;
+  text-align: center;
+}
+.profile-info-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.profile-info-title {
+  font-size: 1rem;
+  color: #757575;
+  font-weight: 400;
+}
+.profile-info-value {
+  font-size: 1.07rem;
+  color: #222;
+  font-weight: 500;
+  margin-top: 1px;
+}
+.profile-info-muted {
+  color: #bdbdbd;
+  font-size: 0.98rem;
+}
+.profile-actions {
+  justify-content: flex-end !important;
+  padding-right: 24px !important;
+  padding-bottom: 8px !important;
 }
 </style>
